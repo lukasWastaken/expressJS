@@ -10,6 +10,12 @@ mongoose.connect('mongodb://localhost:27017/squaresphere', {
   useUnifiedTopology: true
 });
 
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 
