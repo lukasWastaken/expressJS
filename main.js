@@ -61,22 +61,21 @@ app.post('/api/login', async (req, res) => {
 
     if (!user) {
       console.log(`User not found: ${username}`);
-      return res.status(401).json({ success: false, message: 'Benutzer nicht gefunden.' });
+      return res.status(401).json({ success: false, message: 'User not found.' });
     }
     
     const isPasswordCorrect = await user.comparePassword(password);
     
     if (!isPasswordCorrect) {
       console.log(`Incorrect password for user: ${username}`);
-      return res.status(401).json({ success: false, message: 'Falsches Passwort.' });
+      return res.status(401).json({ success: false, message: 'Incorrect password.' });
     }
     
-
     console.log(`User logged in successfully: ${username}`);
     res.json({ success: true });
   } catch (error) {
     console.error(`Error during login for user: ${username}`, error);
-    res.status(500).json({ success: false, message: 'Serverfehler, bitte versuchen Sie es später erneut.' });
+    res.status(500).json({ success: false, message: 'Server error, please try again later.' });
   }
 });
 
