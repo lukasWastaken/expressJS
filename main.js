@@ -51,13 +51,21 @@ app.post('/login', async (req, res) => {
 });
 
 // Serve game files
-const filesDirectory = path.join(__dirname, 'files');
-app.use('/files', express.static(filesDirectory));
+app.get('/files/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const options = {
+    root: path.join(__dirname, 'files'),
+    headers: {
+      'Content-Disposition': `attachment; filename=${filename}`
+    }
+  };
 
-app.get('/files/:fileName', (req, res) => {
-  const fileName = req.params.fileName;
-  const filePath = path.join(filesDirectory, fileName);
-  res.sendFile(filePath);
+  res.sendFile(filename, options, (err) => {
+    if (err) {
+      console.error('Error sending file:', err);
+      res.status(404).send('File not found');
+    }
+  });
 });
 
 app.listen(3000, () => {
