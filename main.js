@@ -50,11 +50,12 @@ app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
   if (user && await user.comparePassword(password)) {
-    res.send('Login erfolgreich!');
+    res.json({ success: true });
   } else {
-    res.send('Login fehlgeschlagen.');
+    res.json({ success: false });
   }
 });
+
 
 // Serve game files
 app.get('/files/:filename', (req, res) => {
