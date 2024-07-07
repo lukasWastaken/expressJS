@@ -26,3 +26,7 @@ const port = 3000;
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
+//Der Code geht, gpt 4o fragen, ihn zu implementieren, 
+//Änderungen:
+//es soll wirklich in der Datenbank überprüft werden, ob da alles passt
