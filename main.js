@@ -91,11 +91,18 @@ app.get('/files/:filename', (req, res) => {
 
   res.sendFile(filename, options, (err) => {
     if (err) {
-      console.error('Error sending file:', err);
-      res.status(404).send('File not found');
+      // Füge spezifische Fehlerbehandlung hinzu
+      if (err.code === 'ECONNABORTED' || err.code === 'ECONNRESET') {
+        console.warn('Client aborted the request');
+        // Optionally, you can log this or take other actions
+      } else {
+        console.error('Error sending file:', err);
+        res.status(404).send('File not found');
+      }
     }
   });
 });
+
 
 app.listen(3000, () => {
   console.log('Server is running on port 3000');
