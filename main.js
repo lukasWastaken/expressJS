@@ -36,8 +36,8 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  const { username, password } = req.body;
-  const user = new User({ username, password });
+  const { username, password, accessLevel } = req.body;
+  const user = new User({ username, password, accessLevel });
   await user.save();
   res.redirect('/login');
 });
@@ -71,13 +71,12 @@ app.post('/api/login', async (req, res) => {
     }
 
     console.log(`User logged in successfully: ${username}`);
-    res.json({ success: true });
+    res.json({ success: true, accessLevel: user.accessLevel });
   } catch (error) {
     console.error(`Error during login for user: ${username}`, error);
     res.status(500).json({ success: false, message: 'Server error, please try again later.' });
   }
 });
-
 
 // Serve game files
 app.get('/files/:filename', (req, res) => {
@@ -102,7 +101,6 @@ app.get('/files/:filename', (req, res) => {
     }
   });
 });
-
 
 app.listen(3000, () => {
   console.log('Server is running on port 3000');
