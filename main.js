@@ -78,6 +78,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+
 // Serve game files
 app.get('/files/:filename', (req, res) => {
   const filename = req.params.filename;
