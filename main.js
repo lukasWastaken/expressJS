@@ -43,11 +43,11 @@ app.post('/register', async (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  //res.render('login.html');
-  res.json({ success: true });
+  res.render('login.html');
+  //res.json({ success: true });
 });
 
-app.post('/login', async (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
