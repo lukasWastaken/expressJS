@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const User = require('./models/User');
 const app = express();
 
-mongoose.connect('mongodb://localhost:27017/testdb', {
+mongoose.connect('mongodb://localhost:27017/squaresphere', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
@@ -48,6 +48,24 @@ app.post('/login', async (req, res) => {
   } else {
     res.send('Login fehlgeschlagen.');
   }
+});
+
+// Serve game files
+app.get('/files/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const options = {
+    root: path.join(__dirname, 'files'),
+    headers: {
+      'Content-Disposition': `attachment; filename=${filename}`
+    }
+  };
+
+  res.sendFile(filename, options, (err) => {
+    if (err) {
+      console.error('Error sending file:', err);
+      res.status(404).send('File not found');
+    }
+  });
 });
 
 app.listen(3000, () => {
