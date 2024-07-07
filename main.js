@@ -15,9 +15,9 @@ app.use((req, res, next) => {
   next();
 });
 
-
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
@@ -46,24 +46,35 @@ app.get('/login', (req, res) => {
   res.render('login.html');
 });
 
-app.post('/login', async (req, res) => {
+app.get('/api/login', (req, res) => {
+  res.status(405).send('Method Not Allowed (squaresphere error)');
+});
+
+app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
-  
+
   try {
+    console.log(`Login attempt for user: ${username}`);
+
     const user = await User.findOne({ username });
+
     if (!user) {
-      return res.json({ success: false, message: 'Benutzer nicht gefunden.' });
+      console.log(`User not found: ${username}`);
+      return res.status(401).json({ success: false, message: 'User not found.' });
     }
 
     const isPasswordCorrect = await user.comparePassword(password);
+
     if (!isPasswordCorrect) {
-      return res.json({ success: false, message: 'Falsches Passwort.' });
+      console.log(`Incorrect password for user: ${username}`);
+      return res.status(401).json({ success: false, message: 'Incorrect password.' });
     }
 
+    console.log(`User logged in successfully: ${username}`);
     res.json({ success: true });
   } catch (error) {
-    console.error('Error during login:', error);
-    res.json({ success: false, message: 'Serverfehler, bitte versuchen Sie es später erneut.' });
+    console.error(`Error during login for user: ${username}`, error);
+    res.status(500).json({ success: false, message: 'Server error, please try again later.' });
   }
 });
 
@@ -80,11 +91,18 @@ app.get('/files/:filename', (req, res) => {
 
   res.sendFile(filename, options, (err) => {
     if (err) {
-      console.error('Error sending file:', err);
-      res.status(404).send('File not found');
+      // Füge spezifische Fehlerbehandlung hinzu
+      if (err.code === 'ECONNABORTED' || err.code === 'ECONNRESET') {
+        console.warn('Client aborted the download request');
+        // Optionally, you can log this or take other actions
+      } else {
+        console.error('Error sending file:', err);
+        res.status(404).send('File not found');
+      }
     }
   });
 });
+
 
 app.listen(3000, () => {
   console.log('Server is running on port 3000');
