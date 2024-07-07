@@ -39,7 +39,6 @@ app.post('/register', async (req, res) => {
   const { username, password, accessLevel } = req.body;
   const user = new User({ username, password, accessLevel });
   await user.save();
-  res.redirect('/login');
 });
 
 app.get('/login', (req, res) => {
