@@ -5,16 +5,17 @@ const bodyParser = require('body-parser');
 const User = require('./models/User');
 const app = express();
 
-mongoose.connect('mongodb://localhost:27017/squaresphere', {
+mongoose.connect('mongodb://localhost:27017/testdb', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
 
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.urlencoded({ extended: true }));
+
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
-
-app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
   res.render('index.html');
