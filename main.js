@@ -42,11 +42,11 @@ app.post('/register', async (req, res) => {
   res.redirect('/login');
 });
 
-//app.get('/login', (req, res) => {
-  //res.render('login.html');
-//});
+app.get('/login', (req, res) => {
+  res.render('login.html');
+});
 
-app.get('/login', async (req, res) => {
+app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
