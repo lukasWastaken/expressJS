@@ -15,9 +15,9 @@ app.use((req, res, next) => {
   next();
 });
 
-
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
@@ -44,7 +44,6 @@ app.post('/register', async (req, res) => {
 
 app.get('/login', (req, res) => {
   res.render('login.html');
-
 });
 
 app.get('/api/login', (req, res) => {
@@ -63,14 +62,14 @@ app.post('/api/login', async (req, res) => {
       console.log(`User not found: ${username}`);
       return res.status(401).json({ success: false, message: 'User not found.' });
     }
-    
+
     const isPasswordCorrect = await user.comparePassword(password);
-    
+
     if (!isPasswordCorrect) {
       console.log(`Incorrect password for user: ${username}`);
       return res.status(401).json({ success: false, message: 'Incorrect password.' });
     }
-    
+
     console.log(`User logged in successfully: ${username}`);
     res.json({ success: true });
   } catch (error) {
@@ -78,8 +77,6 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error, please try again later.' });
   }
 });
-
-
 
 // Serve game files
 app.get('/files/:filename', (req, res) => {
