@@ -48,7 +48,7 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/api/login', (req, res) => {
-  res.status(405).send('Method Not Allowed');
+  res.status(405).send('Method Not Allowed (squaresphere error)');
 });
 
 app.post('/api/login', async (req, res) => {
