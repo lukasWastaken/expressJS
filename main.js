@@ -54,29 +54,25 @@ app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    console.log(`Login attempt for user: ${username}`);
-
     const user = await User.findOne({ username });
 
     if (!user) {
-      console.log(`User not found: ${username}`);
       return res.status(401).json({ success: false, message: 'User not found.' });
     }
 
     const isPasswordCorrect = await user.comparePassword(password);
 
     if (!isPasswordCorrect) {
-      console.log(`Incorrect password for user: ${username}`);
       return res.status(401).json({ success: false, message: 'Incorrect password.' });
     }
 
-    console.log(`User logged in successfully: ${username}`);
     res.json({ success: true, accessLevel: user.accessLevel });
   } catch (error) {
-    console.error(`Error during login for user: ${username}`, error);
+    console.error('Error during login:', error);
     res.status(500).json({ success: false, message: 'Server error, please try again later.' });
   }
 });
+
 
 // Serve game files
 app.get('/files/:filename', (req, res) => {
