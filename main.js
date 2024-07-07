@@ -43,7 +43,8 @@ app.post('/register', async (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  res.render('login.html');
+  //res.render('login.html');
+  res.json({ success: true });
 });
 
 app.post('/login', async (req, res) => {
