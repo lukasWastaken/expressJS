@@ -36,10 +36,10 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  const { username, password } = req.body;
-  const user = new User({ username, password });
+  const { username, password, accessLevel } = req.body;
+  const user = new User({ username, password, accessLevel });
   await user.save();
-  res.redirect('/login');
+  res.send('Account successfully registered')
 });
 
 app.get('/login', (req, res) => {
@@ -54,26 +54,21 @@ app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    console.log(`Login attempt for user: ${username}`);
-
     const user = await User.findOne({ username });
 
     if (!user) {
-      console.log(`User not found: ${username}`);
       return res.status(401).json({ success: false, message: 'User not found.' });
     }
 
     const isPasswordCorrect = await user.comparePassword(password);
 
     if (!isPasswordCorrect) {
-      console.log(`Incorrect password for user: ${username}`);
       return res.status(401).json({ success: false, message: 'Incorrect password.' });
     }
 
-    console.log(`User logged in successfully: ${username}`);
-    res.json({ success: true });
+    res.json({ success: true, accessLevel: user.accessLevel });
   } catch (error) {
-    console.error(`Error during login for user: ${username}`, error);
+    console.error('Error during login:', error);
     res.status(500).json({ success: false, message: 'Server error, please try again later.' });
   }
 });
@@ -91,10 +86,8 @@ app.get('/files/:filename', (req, res) => {
 
   res.sendFile(filename, options, (err) => {
     if (err) {
-      // Füge spezifische Fehlerbehandlung hinzu
       if (err.code === 'ECONNABORTED' || err.code === 'ECONNRESET') {
         console.warn('Client aborted the download request');
-        // Optionally, you can log this or take other actions
       } else {
         console.error('Error sending file:', err);
         res.status(404).send('File not found');
@@ -102,7 +95,6 @@ app.get('/files/:filename', (req, res) => {
     }
   });
 });
-
 
 app.listen(3000, () => {
   console.log('Server is running on port 3000');
