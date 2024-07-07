@@ -47,6 +47,10 @@ app.get('/login', (req, res) => {
 
 });
 
+app.get('/api/login', (req, res) => {
+  res.status(405).send('Method Not Allowed');
+});
+
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
