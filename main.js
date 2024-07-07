@@ -49,12 +49,19 @@ app.get('/login', (req, res) => {
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
-  if (user && await user.comparePassword(password)) {
-    res.json({ success: true });
-  } else {
-    res.json({ success: false });
+
+  if (!user) {
+    return res.json({ success: false, message: 'Benutzer nicht gefunden.' });
   }
+
+  const isPasswordCorrect = await user.comparePassword(password);
+  if (!isPasswordCorrect) {
+    return res.json({ success: false, message: 'Falsches Passwort.' });
+  }
+
+  res.json({ success: true });
 });
+
 
 
 // Serve game files
