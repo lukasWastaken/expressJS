@@ -93,7 +93,7 @@ app.get('/files/:filename', (req, res) => {
     if (err) {
       // Füge spezifische Fehlerbehandlung hinzu
       if (err.code === 'ECONNABORTED' || err.code === 'ECONNRESET') {
-        console.warn('Client aborted the request');
+        console.warn('Client aborted the download request');
         // Optionally, you can log this or take other actions
       } else {
         console.error('Error sending file:', err);
