@@ -59,13 +59,14 @@ app.post('/api/login', async (req, res) => {
       console.log(`User not found: ${username}`);
       return res.status(401).json({ success: false, message: 'Benutzer nicht gefunden.' });
     }
-
+    
     const isPasswordCorrect = await user.comparePassword(password);
-
+    
     if (!isPasswordCorrect) {
       console.log(`Incorrect password for user: ${username}`);
       return res.status(401).json({ success: false, message: 'Falsches Passwort.' });
     }
+    
 
     console.log(`User logged in successfully: ${username}`);
     res.json({ success: true });
