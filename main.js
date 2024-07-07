@@ -36,8 +36,8 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  const { username, password, accessLevel } = req.body;
-  const user = new User({ username, password, accessLevel });
+  const { username, password } = req.body;
+  const user = new User({ username, password, accessLevel: 1 });
   await user.save();
   res.redirect('/login');
 });
@@ -90,10 +90,8 @@ app.get('/files/:filename', (req, res) => {
 
   res.sendFile(filename, options, (err) => {
     if (err) {
-      // Füge spezifische Fehlerbehandlung hinzu
       if (err.code === 'ECONNABORTED' || err.code === 'ECONNRESET') {
         console.warn('Client aborted the download request');
-        // Optionally, you can log this or take other actions
       } else {
         console.error('Error sending file:', err);
         res.status(404).send('File not found');
