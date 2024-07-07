@@ -52,7 +52,6 @@ app.post('/login', async (req, res) => {
   try {
     console.log(`Login attempt for user: ${username}`);
 
-    // Example: Check if user exists in database
     const user = await User.findOne({ username });
 
     if (!user) {
@@ -60,7 +59,6 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Benutzer nicht gefunden.' });
     }
 
-    // Example: Check if password is correct
     const isPasswordCorrect = await user.comparePassword(password);
 
     if (!isPasswordCorrect) {
@@ -68,7 +66,6 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Falsches Passwort.' });
     }
 
-    // Successful login
     console.log(`User logged in successfully: ${username}`);
     res.json({ success: true });
   } catch (error) {
@@ -76,6 +73,7 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ success: false, message: 'Serverfehler, bitte versuchen Sie es später erneut.' });
   }
 });
+
 
 
 
