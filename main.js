@@ -3,12 +3,15 @@ const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const User = require('./models/User');
+const e = require('express');
 const app = express();
 
-mongoose.connect('mongodb://localhost:27017/squaresphere', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+
+  mongoose.connect('mongodb://localhost:27017/squaresphere', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  });
+
 
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');
