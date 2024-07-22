@@ -7,7 +7,7 @@
     "start": "node main.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "squaresphere",
   "license": "ISC",
   "description": "",
   "dependencies": {
