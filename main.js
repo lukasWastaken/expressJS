@@ -7,7 +7,7 @@ const e = require('express');
 const app = express();
 
 
-  mongoose.connect('mongodb://localhost:27017/squaresphere', {
+  mongoose.connect('mongodb://192.168.0.101:27017/squaresphere', {
     useNewUrlParser: true,
     useUnifiedTopology: true
   });
@@ -41,7 +41,6 @@ app.get('/status', (req, res) => {
 app.get('/register', (req, res) => {
   res.render('register.html');
 });
-
 app.post('/register', async (req, res) => {
   const { username, password, accessLevel } = req.body;
   const user = new User({ username, password, accessLevel });
@@ -55,6 +54,9 @@ app.get('/login', (req, res) => {
 
 app.get('/api/login', (req, res) => {
   res.status(405).send('Method Not Allowed (squaresphere error)');
+});
+app.get('/api/register', (req, res) => {
+  res.status(405).send('Method Not Allowed (squaresphere error');
 });
 
 app.post('/api/login', async (req, res) => {
