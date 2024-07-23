@@ -7,7 +7,7 @@ const e = require('express');
 const app = express();
 
 
-  mongoose.connect('mongodb://192.168.0.101:27017/squaresphere', {
+  mongoose.connect('mongodb://localhost:27017/squaresphere', {
     useNewUrlParser: true,
     useUnifiedTopology: true
   });
