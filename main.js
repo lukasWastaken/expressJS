@@ -25,12 +25,14 @@ app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
 
+
+
 app.get('/', (req, res) => {
   res.render('index.html');
 });
 
 app.get('/test', (req, res) => {
-  res.render('test.html');
+  res.send("Server's running!")
 });
 
 app.get('/status', (req, res) => {
