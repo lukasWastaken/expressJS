@@ -12,7 +12,6 @@ const app = express();
     useUnifiedTopology: true
   });
 
-
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');
   next();
@@ -26,18 +25,24 @@ app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
 
+
+
 app.get('/', (req, res) => {
   res.render('index.html');
 });
 
 app.get('/test', (req, res) => {
-  res.render('test.html');
+  res.send("Server's running!")
 });
 
 app.get('/status', (req, res) => {
   res.render('status.html')
 })
 
+
+/*
+Login start
+*/
 app.get('/register', (req, res) => {
   res.render('register.html');
 });
@@ -81,9 +86,13 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error, please try again later.' });
   }
 });
+/*
+Login end
+*/
 
 
-// Serve game files
+
+/*Game Files start*/ 
 app.get('/files/:filename', (req, res) => {
   const filename = req.params.filename;
   const options = {
@@ -104,6 +113,10 @@ app.get('/files/:filename', (req, res) => {
     }
   });
 });
+/*
+Game Files end
+*/ 
+
 
 app.listen(3000, () => {
   console.log('Server is running on http://localhost:3000');
