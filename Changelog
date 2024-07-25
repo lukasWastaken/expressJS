@@ -1,8 +1,0 @@
-Changed by Lukas (23.07.2024):
-- Added GET Method for endpoint '/api/login' returning 405 Method not allowed
-- Added changelog File
-- Translated all frontend parts to english
-- Added nodemon as Dev dependencie
-- Added way to run as dev version with hot reload on file change
-- ------------------------------------------------------------------
-- Changed Database adress back to normal
