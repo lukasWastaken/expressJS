@@ -27,7 +27,7 @@ app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(session({
-  secret: 'squarespheresecretkeyfürkeineahnung,loginodersokeinfkdjsklföjsföiejaklgdnskaflekienfdknlkeslndfkdlasöjkeflökjdas',
+  secret: 'your_secret_key',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false } // Set to true if using HTTPS
