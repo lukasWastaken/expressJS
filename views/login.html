@@ -9,14 +9,38 @@
 <body>
     <div class="container">
         <h1>Login</h1>
-        <form action="/login" method="post">
-            <label for="username">Benutzername:</label>
-            <input type="text" id="username" name="username" required>
-            <label for="password">Passwort:</label>
-            <input type="password" id="password" name="password" required>
+        <form id="login-form">
+            <input type="text" id="username" name="username" placeholder="Username" required>
+            <input type="password" id="password" name="password" placeholder="Password" required>
             <button type="submit">Login</button>
         </form>
-        <a href="/">Zurück zur Startseite</a>
+        <p id="error-message" style="color: red;"></p>
     </div>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = '/';
+                } else {
+                    document.getElementById('error-message').textContent = data.message;
+                }
+            } catch (error) {
+                console.error('Error logging in:', error);
+                document.getElementById('error-message').textContent = 'An error occurred. Please try again later.';
+            }
+        });
+    </script>
 </body>
 </html>
