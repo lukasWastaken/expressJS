@@ -27,7 +27,7 @@ app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(session({
-  secret: 'your_secret_key',
+  secret: 'scretsquaresphererkeyfdksfjkslaöjfiewtbaiefhdsl3meyjfkdlaöwefbiakakroordsioafijaskdlkakakjlkdjkl',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false } // Set to true if using HTTPS
@@ -126,7 +126,15 @@ Login end
 */
 
 /* MOTD Routes start */
-app.get('/api/motd', isAuthenticated, async (req, res) => {
+app.get('/api/session', (req, res) => {
+  if (req.session.userId) {
+    res.json({ loggedIn: true, isTeam: req.session.isTeam });
+  } else {
+    res.json({ loggedIn: false });
+  }
+});
+
+app.get('/api/motd', async (req, res) => {
   try {
     const motd = await MOTD.findOne();
     res.json({ success: true, motd: motd ? motd.text : '' });

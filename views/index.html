@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <link rel="stylesheet" href="/styles.css">
+    <style>
+        .container {
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+        }
+        #login-section,
+        #motd-section {
+            margin: 20px 0;
+        }
+        #motd-input,
+        #motd-save {
+            display: none;
+        }
+        #motd-section {
+            display: none; /* Initially hide the MOTD section */
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -13,11 +31,11 @@
             <a href="/register">Register</a>
             <a href="/login">Login</a>
         </div>
-        <div id="motd-section" style="display:none;">
+        <div id="motd-section">
             <h2>MOTD</h2>
             <p id="motd-text"></p>
-            <textarea id="motd-input" style="display:none;"></textarea>
-            <button id="motd-save" style="display:none;">Save</button>
+            <textarea id="motd-input"></textarea>
+            <button id="motd-save">Save</button>
             <a href="/logout">Logout</a>
         </div>
     </div>
@@ -29,7 +47,7 @@
                 if (data.success) {
                     document.getElementById('motd-text').textContent = data.motd;
                 } else {
-                    alert(data.message);
+                    //alert(data.message);
                 }
             } catch (error) {
                 console.error('Error fetching MOTD:', error);
@@ -49,9 +67,9 @@
                 const data = await response.json();
                 if (data.success) {
                     document.getElementById('motd-text').textContent = text;
-                    alert(data.message);
+                    //alert(data.message);
                 } else {
-                    alert(data.message);
+                    //alert(data.message);
                 }
             } catch (error) {
                 console.error('Error saving MOTD:', error);
