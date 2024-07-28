@@ -5,11 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <link rel="stylesheet" href="/styles.css">
+    <style>
+        .container {
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+        }
+        #login-section,
+        #motd-section {
+            margin: 20px 0;
+        }
+        #motd-input,
+        #motd-save {
+            display: none;
+        }
+        #motd-section {
+            display: none; /* Initially hide the MOTD section */
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Welcome!</h1>
-        <a href="/register">Register</a>
+        <div id="login-section">
+            <a href="/register">Register</a>
+            <a href="/login">Login</a>
+        </div>
+        <div id="motd-section">
+            <h2>MOTD</h2>
+            <p id="motd-text"></p>
+            <textarea id="motd-input"></textarea>
+            <button id="motd-save">Save</button>
+            <a href="/logout">Logout</a>
+        </div>
     </div>
+    <script>
+        async function fetchMOTD() {
+            try {
+                const response = await fetch('/api/motd');
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('motd-text').textContent = data.motd;
+                } else {
+                    //alert(data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching MOTD:', error);
+            }
+        }
+
+        async function saveMOTD() {
+            const text = document.getElementById('motd-input').value;
+            try {
+                const response = await fetch('/api/motd', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('motd-text').textContent = text;
+                    //alert(data.message);
+                } else {
+                    //alert(data.message);
+                }
+            } catch (error) {
+                console.error('Error saving MOTD:', error);
+            }
+        }
+
+        async function checkSession() {
+            try {
+                const response = await fetch('/api/session');
+                const data = await response.json();
+                if (data.loggedIn) {
+                    document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('motd-section').style.display = 'block';
+                    if (data.isTeam) {
+                        document.getElementById('motd-input').style.display = 'block';
+                        document.getElementById('motd-save').style.display = 'block';
+                    }
+                    fetchMOTD();
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSession();
+            document.getElementById('motd-save').addEventListener('click', saveMOTD);
+        });
+    </script>
 </body>
 </html>
