@@ -8,7 +8,7 @@ const MOTD = require('./models/motd');
 
 const app = express();
 
-mongoose.connect('mongodb://localhost:27017/squaresphere', {
+mongoose.connect('mongodb://192.168.0.101:27017/squaresphere', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
@@ -134,24 +134,33 @@ app.get('/api/session', (req, res) => {
   }
 });
 
+// Aktualisiertes MOTD-Schema mit Timestamp-Feld
+const motdSchema = new mongoose.Schema({
+  text: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now }
+});
+
 app.get('/api/motd', async (req, res) => {
   try {
     const motd = await MOTD.findOne();
-    res.json({ success: true, motd: motd ? motd.text : '' });
+    res.json({ success: true, motd: motd ? motd.text : '', timestamp: motd ? motd.timestamp : null });
   } catch (error) {
     console.error('Error fetching MOTD:', error);
     res.status(500).json({ success: false, message: 'Server error, please try again later.' });
   }
 });
 
+// Route zum Speichern des MOTD
 app.post('/api/motd', isAuthenticated, isTeamMember, async (req, res) => {
   const { text } = req.body;
   try {
     let motd = await MOTD.findOne();
+    const timestamp = new Date();
     if (motd) {
       motd.text = text;
+      motd.timestamp = timestamp;
     } else {
-      motd = new MOTD({ text });
+      motd = new MOTD({ text, timestamp });
     }
     await motd.save();
     res.json({ success: true, message: 'MOTD updated successfully' });

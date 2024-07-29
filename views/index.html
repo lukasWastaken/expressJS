@@ -6,10 +6,23 @@
     <title>Home</title>
     <link rel="stylesheet" href="/styles.css">
     <style>
+        body {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-family: Arial, sans-serif;
+        }
+        a {
+            color: #ff79c6;
+        }
         .container {
             width: 80%;
             margin: auto;
             padding: 20px;
+            background-color: #2b2b2b;
+            border-radius: 10px;
+        }
+        h1, h2 {
+            color: #bd93f9;
         }
         #login-section,
         #motd-section {
@@ -21,6 +34,30 @@
         }
         #motd-section {
             display: none; /* Initially hide the MOTD section */
+        }
+        #motd-text {
+            white-space: pre-wrap; /* Preserve whitespace including newlines */
+        }
+        textarea {
+            width: calc(100% - 22px); /* Adjust the width to fit inside the container */
+            height: 100px;
+            background-color: #3b3b3b;
+            color: #e0e0e0;
+            border: 1px solid #bd93f9;
+            border-radius: 5px;
+            padding: 10px;
+            resize: none; /* Disable resizing */
+        }
+        button {
+            background-color: #bd93f9;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #ff79c6;
         }
     </style>
 </head>
@@ -34,20 +71,63 @@
         <div id="motd-section">
             <h2>MOTD</h2>
             <p id="motd-text"></p>
+            <p id="motd-timestamp"></p> <!-- Timestamp area -->
             <textarea id="motd-input"></textarea>
             <button id="motd-save">Save</button>
             <a href="/logout">Logout</a>
         </div>
     </div>
     <script>
+        let lastUpdated;
+
+        function timeSince(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if(seconds == 1){
+                return seconds + " second ago";
+            }
+            if (seconds < 60 && seconds > 1) {
+                return seconds + " seconds ago";
+            }
+            const minutes = Math.floor(seconds / 60);
+            if(minutes == 1){
+                return minutes + " minute ago";
+            }
+            if (minutes < 60 && minutes > 1) {
+                return minutes + " minutes ago";
+            }
+            const hours = Math.floor(minutes / 60);
+            if(hours == 1){
+                return hours + " hour ago";
+            }
+            if (hours < 24 && hours > 1) {
+                return hours + " hours ago";
+            }
+            const days = Math.floor(hours / 24);
+            if(days == 1){
+                return days + " day ago";
+            }else{
+                return days + " days ago";
+            }
+            
+        }
+
+        function updateTimestamp() {
+            if (lastUpdated) {
+                document.getElementById('motd-timestamp').textContent = `Last updated: ${timeSince(lastUpdated)}`;
+            }
+        }
+
         async function fetchMOTD() {
             try {
                 const response = await fetch('/api/motd');
                 const data = await response.json();
                 if (data.success) {
                     document.getElementById('motd-text').textContent = data.motd;
+                    lastUpdated = new Date(data.timestamp);
+                    updateTimestamp();
+                    setInterval(updateTimestamp, 1000); // Update timestamp every second
                 } else {
-                    //alert(data.message);
+                    console.error('Error fetching MOTD:', data.message);
                 }
             } catch (error) {
                 console.error('Error fetching MOTD:', error);
@@ -67,9 +147,11 @@
                 const data = await response.json();
                 if (data.success) {
                     document.getElementById('motd-text').textContent = text;
-                    //alert(data.message);
+                    document.getElementById('motd-input').value = ''; // Clear the input field
+                    lastUpdated = new Date();
+                    updateTimestamp();
                 } else {
-                    //alert(data.message);
+                    console.error('Error saving MOTD:', data.message);
                 }
             } catch (error) {
                 console.error('Error saving MOTD:', error);
