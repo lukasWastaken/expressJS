@@ -99,3 +99,7 @@ button {
 button:hover {
     background-color: #ff79c6;
 }
+.no-scroll {
+    overflow: hidden;
+  }
+  
