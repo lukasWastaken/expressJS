@@ -111,6 +111,8 @@
                 <textarea id="motd-input"></textarea>
                 <button id="motd-save" class="button">Save</button>
                 <button id="motd-cancel" class="button">Cancel</button>
+                <button id="insert-day-btn" class="button">Insert Day</button>
+                <button id="clear-input-btn" class="button">Clear</button> <!-- Neuer Button -->
             </div>
             <a id="logout-button" href="/logout">Logout</a>
         </div>
@@ -215,11 +217,37 @@
             document.getElementById('motd-popup').style.display = 'none';
         }
 
+        // Funktion zur Ermittlung des Wochentags in englischer Sprache
+        function getDayOfWeek() {
+            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            const today = new Date();
+            return days[today.getDay()];
+        }
+
+        // Funktion zum Einfügen des Textes an der Cursor-Position
+        function insertDayAtCursor() {
+            const motdInput = document.getElementById('motd-input');
+            const day = getDayOfWeek();
+            const textToInsert = `🕹️(${day}) `;
+            const start = motdInput.selectionStart;
+            const end = motdInput.selectionEnd;
+            motdInput.value = motdInput.value.substring(0, start) + textToInsert + motdInput.value.substring(end);
+            motdInput.focus();
+            motdInput.selectionStart = motdInput.selectionEnd = start + textToInsert.length;
+        }
+
+        // Neue Funktion zum Leeren des Textbereichs
+        function clearInput() {
+            document.getElementById('motd-input').value = '';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             checkSession();
             document.getElementById('edit-motd-btn').addEventListener('click', openPopup);
-            document.getElementById('motd-save').addEventListener('click', saveMOTD);
             document.getElementById('motd-cancel').addEventListener('click', closePopup);
+            document.getElementById('motd-save').addEventListener('click', saveMOTD);
+            document.getElementById('insert-day-btn').addEventListener('click', insertDayAtCursor);
+            document.getElementById('clear-input-btn').addEventListener('click', clearInput); // Event-Listener für den Clear Button
         });
     </script>
 </body>
