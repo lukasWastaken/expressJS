@@ -5,18 +5,54 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const User = require('./models/User');
 const MOTD = require('./models/motd');
+const Release = require('./models/Release'); // Neues Modell
 
 const app = express();
+const RECONNECT_INTERVAL = 10000; // 10 Sekunden in Millisekunden
 
-mongoose.connect('mongodb://localhost:27017/squaresphere', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
+const dbUrl = "mongodb://localhost:27017/squaresphere"
+
+// Funktion zur Verbindung mit der Datenbank
+async function connectToDatabase() {
+  try {
+    await mongoose.connect(dbUrl, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('Error connecting to MongoDB:', error);
+    console.log(`Retrying in ${RECONNECT_INTERVAL / 1000} seconds...`);
+    setTimeout(connectToDatabase, RECONNECT_INTERVAL);
+  }
+}
+
+// Initialer Verbindungsversuch
+connectToDatabase();
+
+// Überprüfen der Verbindung bei jedem Request
+app.use((req, res, next) => {
+  if (mongoose.connection.readyState !== 1) { // 1 bedeutet verbunden
+    console.error('No MongoDB connection available.');
+  }
+  next();
 });
 
-//app.use((req, res, next) => {
-  //res.set('Cache-Control', 'no-store');
-  //next();
-//});
+
+app.get('/api/status/database', async (req, res) => {
+  try {
+    // Überprüfen Sie den aktuellen Verbindungsstatus
+    if (mongoose.connection.readyState === 1) { // 1 bedeutet verbunden
+      res.json({ status: 'operational' });
+    } else {
+      res.json({ status: 'down' });
+    }
+  } catch (error) {
+    console.error('Fehler beim Überprüfen der Datenbankverbindung:', error);
+    res.json({ status: 'down' });
+  }
+});
+
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -49,6 +85,14 @@ function isTeamMember(req, res, next) {
   res.status(403).send('Forbidden');
 }
 
+// Middleware to check if user is an admin (team member)
+function isAdmin(req, res, next) {
+  if (req.session.isTeam) {
+    return next();
+  }
+  res.status(403).send('Forbidden');
+}
+
 app.get('/', (req, res) => {
   res.render('index.html');
 });
@@ -57,7 +101,7 @@ app.get('/test', (req, res) => {
   res.send("Server's running!");
 });
 
-app.get('/status', (req, res) => {
+app.get('/status', isAuthenticated, (req, res) => {
   res.render('status.html');
 });
 
@@ -134,12 +178,6 @@ app.get('/api/session', (req, res) => {
   }
 });
 
-// Aktualisiertes MOTD-Schema mit Timestamp-Feld
-const motdSchema = new mongoose.Schema({
-  text: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now }
-});
-
 app.get('/api/motd', async (req, res) => {
   try {
     const motd = await MOTD.findOne();
@@ -171,6 +209,67 @@ app.post('/api/motd', isAuthenticated, isTeamMember, async (req, res) => {
 });
 /* MOTD Routes end */
 
+/* Release Routes start */
+app.get('/releases', isAuthenticated, async (req, res) => {
+  try {
+    const releases = await Release.find().sort({ timestamp: -1 });
+    res.render('releases.html', { releases, isAdmin: req.session.isTeam });
+  } catch (error) {
+    console.error('Error fetching releases:', error);
+    res.status(500).send('Server error, please try again later.');
+  }
+});
+
+app.get('/api/releases', async (req, res) => {
+  try {
+    const releases = await Release.find().sort({ timestamp: -1 });
+    res.json({ success: true, releases });
+  } catch (error) {
+    console.error('Error fetching releases:', error);
+    res.status(500).json({ success: false, message: 'Server error, please try again later.' });
+  }
+});
+
+app.post('/api/releases', isAuthenticated, isAdmin, async (req, res) => {
+  const { title, channel, evocati, features, bugFixes, knownIssues } = req.body;
+  try {
+    const release = new Release({ title, channel, evocati, features, bugFixes, knownIssues });
+    await release.save();
+    res.json({ success: true, message: 'Release created successfully' });
+  } catch (error) {
+    console.error('Error creating release:', error);
+    res.status(500).json({ success: false, message: 'Server error, please try again later.' });
+  }
+});
+
+app.put('/api/releases/:id', isAuthenticated, isAdmin, async (req, res) => {
+  const { title, channel, evocati, features, bugFixes, knownIssues } = req.body;
+  try {
+    const release = await Release.findByIdAndUpdate(req.params.id, { title, channel, evocati, features, bugFixes, knownIssues }, { new: true });
+    if (!release) {
+      return res.status(404).json({ success: false, message: 'Release not found' });
+    }
+    res.json({ success: true, message: 'Release updated successfully', release });
+  } catch (error) {
+    console.error('Error updating release:', error);
+    res.status(500).json({ success: false, message: 'Server error, please try again later.' });
+  }
+});
+
+app.delete('/api/releases/:id', isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const release = await Release.findByIdAndDelete(req.params.id);
+    if (!release) {
+      return res.status(404).json({ success: false, message: 'Release not found' });
+    }
+    res.json({ success: true, message: 'Release deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting release:', error);
+    res.status(500).json({ success: false, message: 'Server error, please try again later.' });
+  }
+});
+/* Release Routes end */
+
 /*Game Files start*/ 
 app.get('/files/:filename', (req, res) => {
   const filename = req.params.filename;
@@ -195,5 +294,5 @@ app.get('/files/:filename', (req, res) => {
 /*Game Files end*/ 
 
 app.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000');
+  console.log('Server is running on port 3000');
 });

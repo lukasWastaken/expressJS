@@ -17,8 +17,9 @@
             height: 100vh;
             margin: 0;
         }
-        a {
+        a, button {
             color: #ff79c6;
+            text-decoration: none;
         }
         .container {
             width: 80%;
@@ -50,11 +51,14 @@
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
-            text-decoration: none;
             display: inline-block;
         }
-        .button:hover {
+        .button:hover:not([disabled]) {
             background-color: #ff79c6;
+        }
+        .button[disabled] {
+            background-color: #3b3b3b;
+            cursor: not-allowed;
         }
         .popup {
             display: none;
@@ -84,14 +88,20 @@
             margin-top: 10px;
         }
         header {
-            display: none; /* Initially hidden */
+            display: flex;
             justify-content: center;
             margin-bottom: 20px;
+        }
+        .header-button {
+            margin-right: 10px;
         }
     </style>
 </head>
 <body>
     <header id="download-header">
+        <a href="/status" class="button header-button">Status</a>
+        <a href="/releases" class="button header-button">Releases</a>
+ 
         <a href="/files/launcher-setup-1.1.exe" class="button">Download Launcher</a>
     </header>
     <div class="container">
@@ -111,6 +121,8 @@
                 <textarea id="motd-input"></textarea>
                 <button id="motd-save" class="button">Save</button>
                 <button id="motd-cancel" class="button">Cancel</button>
+                <button id="insert-day-btn" class="button">Insert Day</button>
+                <button id="clear-input-btn" class="button">Clear</button>
             </div>
             <a id="logout-button" href="/logout">Logout</a>
         </div>
@@ -178,26 +190,31 @@
         }
 
         async function checkSession() {
-            try {
-                const response = await fetch('/api/session');
-                const data = await response.json();
-                if (data.loggedIn) {
-                    document.getElementById('login-section').style.display = 'none';
-                    document.getElementById('motd-section').style.display = 'block';
-                    document.getElementById('download-header').style.display = 'flex'; // Show download button when logged in
-                    if (data.isTeam) {
-                        document.getElementById('edit-motd-btn').style.display = 'block';
-                    }
-                    fetchMOTD();
-                } else {
-                    document.getElementById('motd-section').style.display = 'none';
-                    document.getElementById('login-section').style.display = 'block';
-                    document.getElementById('download-header').style.display = 'none'; // Hide download button when not logged in
-                }
-            } catch (error) {
-                console.error('Error checking session:', error);
+    try {
+        const response = await fetch('/api/session');
+        const data = await response.json();
+        if (data.loggedIn) {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('motd-section').style.display = 'block';
+            document.getElementById('download-header').style.display = 'flex'; // Show download header for all logged-in users
+
+            if (data.isTeam) {
+                document.getElementById('edit-motd-btn').style.display = 'block';
+            } else {
+                document.getElementById('edit-motd-btn').style.display = 'none'; // Hide edit button for non-admin users
             }
+            fetchMOTD();
+        } else {
+            document.getElementById('motd-section').style.display = 'none';
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('download-header').style.display = 'none'; // Hide download header when not logged in
         }
+    } catch (error) {
+        console.error('Error checking session:', error);
+    }
+}
+
+
 
         function formatLinks(text) {
             const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g;
@@ -215,11 +232,37 @@
             document.getElementById('motd-popup').style.display = 'none';
         }
 
+        // Funktion zur Ermittlung des Wochentags in englischer Sprache
+        function getDayOfWeek() {
+            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            const today = new Date();
+            return days[today.getDay()];
+        }
+
+        // Funktion zum Einfügen des Textes an der Cursor-Position
+        function insertDayAtCursor() {
+            const motdInput = document.getElementById('motd-input');
+            const day = getDayOfWeek();
+            const textToInsert = `🕹️(${day}) `;
+            const start = motdInput.selectionStart;
+            const end = motdInput.selectionEnd;
+            motdInput.value = motdInput.value.substring(0, start) + textToInsert + motdInput.value.substring(end);
+            motdInput.focus();
+            motdInput.selectionStart = motdInput.selectionEnd = start + textToInsert.length;
+        }
+
+        // Neue Funktion zum Leeren des Textbereichs
+        function clearInput() {
+            document.getElementById('motd-input').value = '';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             checkSession();
             document.getElementById('edit-motd-btn').addEventListener('click', openPopup);
-            document.getElementById('motd-save').addEventListener('click', saveMOTD);
             document.getElementById('motd-cancel').addEventListener('click', closePopup);
+            document.getElementById('motd-save').addEventListener('click', saveMOTD);
+            document.getElementById('insert-day-btn').addEventListener('click', insertDayAtCursor);
+            document.getElementById('clear-input-btn').addEventListener('click', clearInput); // Event-Listener für den Clear Button
         });
     </script>
 </body>

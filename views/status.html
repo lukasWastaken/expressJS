@@ -1,11 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status Page</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .status-container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #2b2b2b;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    .status-item:last-child {
+      border-bottom: none;
+    }
+    .status-name {
+      font-weight: bold;
+    }
+    .status-operational {
+      color: green;
+    }
+    .status-down {
+      color: red;
+    }
+    .back-button {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      text-align: center;
+    }
+    .back-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 <body>
-    <h1>Status website comming soon!</h1>
+  <div class="status-container">
+    <h2>System Status</h2>
+    <div class="status-item">
+      <span class="status-name">Datenbank</span>
+      <span id="db-status" class="status-operational">Operational ✓</span>
+    </div>
+    <div class="status-item">
+      <span class="status-name">Homepage</span>
+      <span id="route-root-status" class="status-operational">Operational ✓</span>
+    </div>
+    <div class="status-item">
+      <span class="status-name">Register Website</span>
+      <span id="route-register-status" class="status-operational">Operational ✓</span>
+    </div>
+    <div class="status-item">
+      <span class="status-name">Login Website</span>
+      <span id="route-login-status" class="status-operational">Operational ✓</span>
+    </div>
+    <div class="status-item">
+      <span class="status-name">motd api</span>
+      <span id="route-motd-status" class="status-operational">Operational ✓</span>
+    </div>
+    <div class="status-item">
+      <span class="status-name">File download</span>
+      <span id="route-files-status" class="status-operational">Operational ✓</span>
+    </div>
+    <div class="status-item">
+        <span class="status-name">Releases Website</span>
+        <span id="releases-website-status" class="status-operational">Operational ✓</span>
+      </div>
+    <a href="/" class="back-button">Back to Homepage</a>
+  </div>
+  <script>
+    // Example script to dynamically update status (to be replaced with real status checks)
+    function updateStatus(service, status) {
+      const statusElement = document.getElementById(service);
+      if (status === 'operational') {
+        statusElement.className = 'status-operational';
+        statusElement.textContent = 'Operational ✓';
+      } else {
+        statusElement.className = 'status-down';
+        statusElement.textContent = 'Down ✕';
+      }
+    }
+
+    // Check database connection status
+    fetch('/api/status/database')
+      .then(response => response.json())
+      .then(data => {
+        updateStatus('db-status', data.status);
+      })
+      .catch(error => {
+        updateStatus('db-status', 'down');
+      });
+
+    // Check route statuses
+    const routes = [
+      { id: 'route-root-status', route: '/' },
+      { id: 'route-register-status', route: '/register' },
+      { id: 'route-login-status', route: '/login' },
+      { id: 'route-motd-status', route: '/api/motd' },
+      { id: 'route-files-status', route: '/files/testfile' }, // testfile as an example
+      { id: 'releases-website-statusm', route: '/releases'}
+    ];
+
+    routes.forEach(route => {
+      fetch(route.route)
+        .then(response => {
+          if (response.ok) {
+            updateStatus(route.id, 'operational');
+          } else {
+            updateStatus(route.id, 'down');
+          }
+        })
+        .catch(error => {
+          updateStatus(route.id, 'down');
+        });
+    });
+  </script>
 </body>
 </html>
