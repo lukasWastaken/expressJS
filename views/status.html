@@ -74,6 +74,10 @@
       <span class="status-name">File download</span>
       <span id="route-files-status" class="status-operational">Operational ✓</span>
     </div>
+    <div class="status-item">
+        <span class="status-name">Releases Website</span>
+        <span id="releases-website-status" class="status-operational">Operational ✓</span>
+      </div>
     <a href="/" class="back-button">Back to Homepage</a>
   </div>
   <script>
@@ -105,7 +109,8 @@
       { id: 'route-register-status', route: '/register' },
       { id: 'route-login-status', route: '/login' },
       { id: 'route-motd-status', route: '/api/motd' },
-      { id: 'route-files-status', route: '/files/testfile' } // testfile as an example
+      { id: 'route-files-status', route: '/files/testfile' }, // testfile as an example
+      { id: 'releases-website-statusm', route: '/releases'}
     ];
 
     routes.forEach(route => {

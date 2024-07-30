@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Releases</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .release {
+            border: 1px solid #bd93f9;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #2b2b2b;
+        }
+        .release h3 {
+            color: #bd93f9;
+            cursor: pointer;
+        }
+        .release p {
+            margin: 5px 0;
+        }
+        .admin-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        .admin-buttons button {
+            background-color: #bd93f9;
+            color: #1a1a1a;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .admin-buttons button:hover {
+            background-color: #ff79c6;
+        }
+        /* Popup Styles */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        .popup-content {
+            display: flex;
+            flex-direction: column;
+        }
+        .popup-content label {
+            margin-top: 10px;
+        }
+        .popup-content input,
+        .popup-content textarea {
+            margin-top: 5px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #bd93f9;
+            background-color: #2b2b2b;
+            color: #f8f8f2;
+        }
+        .popup-content button {
+            margin-top: 20px;
+            background-color: #bd93f9;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .popup-content button:hover {
+            background-color: #ff79c6;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            color: #ff79c6;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/" class="button header-button">Home</a>
+    </header>
+    <div class="container">
+        <h1>Releases</h1>
+        <div id="releases-list"></div>
+        <div id="admin-controls" style="display: none;">
+            <button id="create-release-btn" class="button">Create New Release</button>
+        </div>
+    </div>
+
+    <!-- Popup Form for Creating and Viewing Releases -->
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <span class="close-btn" id="closeBtn">&times;</span>
+            <h2 id="popup-title">Neuen Release hinzufügen</h2>
+            <form id="releaseForm">
+                <label for="title">Titel:</label>
+                <input type="text" id="title" name="title" required>
+                
+                <label for="channel">Kanal:</label>
+                <input type="text" id="channel" name="channel" required>
+                
+                <label for="evocati">Evocati:</label>
+                <input type="checkbox" id="evocati" name="evocati">
+                
+                <label for="features">Funktionen:</label>
+                <textarea id="features" name="features" required></textarea>
+                
+                <label for="bugFixes">Fehlerbehebungen:</label>
+                <textarea id="bugFixes" name="bugFixes" required></textarea>
+                
+                <label for="knownIssues">Bekannte Probleme:</label>
+                <textarea id="knownIssues" name="knownIssues" required></textarea>
+                
+                <button type="button" id="saveReleaseBtn">Speichern</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        async function fetchReleases() {
+            try {
+                const response = await fetch('/api/releases');
+                const data = await response.json();
+                if (data.success) {
+                    displayReleases(data.releases);
+                } else {
+                    console.error('Error fetching releases:', data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching releases:', error);
+            }
+        }
+
+        function displayReleases(releases) {
+            const releasesList = document.getElementById('releases-list');
+            releasesList.innerHTML = '';
+            releases.forEach(release => {
+                const releaseElement = document.createElement('div');
+                releaseElement.className = 'release';
+                releaseElement.innerHTML = `
+                    <h3 onclick="showReleaseDetails('${release._id}')">${release.title}</h3>
+                    <p><strong>Channel:</strong> ${release.channel}</p>
+                `;
+                if (isAdmin) {
+                    const adminButtons = document.createElement('div');
+                    adminButtons.className = 'admin-buttons';
+                    adminButtons.innerHTML = `
+                        <button onclick="editRelease('${release._id}')">Edit</button>
+                        <button onclick="deleteRelease('${release._id}')">Delete</button>
+                    `;
+                    releaseElement.appendChild(adminButtons);
+                }
+                releasesList.appendChild(releaseElement);
+            });
+        }
+
+        async function checkSession() {
+            try {
+                const response = await fetch('/api/session');
+                const data = await response.json();
+                if (data.loggedIn) {
+                    if (data.isTeam) {
+                        document.getElementById('admin-controls').style.display = 'block';
+                        isAdmin = true;
+                    }
+                    fetchReleases();
+                } else {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
+            }
+        }
+
+        async function createRelease() {
+            document.getElementById('popup-title').textContent = 'Neuen Release hinzufügen';
+            document.getElementById('releaseForm').reset();
+            document.getElementById('saveReleaseBtn').setAttribute('onclick', 'saveRelease()');
+            const popup = document.getElementById('popup');
+            popup.style.display = 'block';
+        }
+
+        function closePopup() {
+            const popup = document.getElementById('popup');
+            popup.style.display = 'none';
+        }
+
+        async function saveRelease() {
+            const title = document.getElementById('title').value;
+            const channel = document.getElementById('channel').value;
+            const evocati = document.getElementById('evocati').checked;
+            const features = document.getElementById('features').value;
+            const bugFixes = document.getElementById('bugFixes').value;
+            const knownIssues = document.getElementById('knownIssues').value;
+
+            const newRelease = {
+                title,
+                channel,
+                evocati,
+                features,
+                bugFixes,
+                knownIssues
+            };
+
+            try {
+                const response = await fetch('/api/releases', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newRelease)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    closePopup();
+                    fetchReleases();
+                } else {
+                    console.error('Error creating release:', data.message);
+                }
+            } catch (error) {
+                console.error('Error creating release:', error);
+            }
+        }
+
+        async function showReleaseDetails(id) {
+            try {
+                const response = await fetch(`/api/releases/${id}`);
+                const release = await response.json();
+                if (release.success) {
+                    document.getElementById('popup-title').textContent = release.title;
+                    document.getElementById('title').value = release.title;
+                    document.getElementById('channel').value = release.channel;
+                    document.getElementById('evocati').checked = release.evocati;
+                    document.getElementById('features').value = release.features;
+                    document.getElementById('bugFixes').value = release.bugFixes;
+                    document.getElementById('knownIssues').value = release.knownIssues;
+                    document.getElementById('saveReleaseBtn').setAttribute('onclick', `saveEditedRelease('${release._id}')`);
+                    const popup = document.getElementById('popup');
+                    popup.style.display = 'block';
+                } else {
+                    console.error('Error fetching release details:', release.message);
+                }
+            } catch (error) {
+                console.error('Error fetching release details:', error);
+            }
+        }
+
+        async function saveEditedRelease(id) {
+            const title = document.getElementById('title').value;
+            const channel = document.getElementById('channel').value;
+            const evocati = document.getElementById('evocati').checked;
+            const features = document.getElementById('features').value;
+            const bugFixes = document.getElementById('bugFixes').value;
+            const knownIssues = document.getElementById('knownIssues').value;
+
+            const updatedRelease = {
+                title,
+                channel,
+                evocati,
+                features,
+                bugFixes,
+                knownIssues
+            };
+
+            try {
+                const response = await fetch(`/api/releases/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedRelease)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    closePopup();
+                    fetchReleases();
+                } else {
+                    console.error('Error updating release:', data.message);
+                }
+            } catch (error) {
+                console.error('Error updating release:', error);
+            }
+        }
+
+        async function editRelease(id) {
+            showReleaseDetails(id);
+        }
+
+        async function deleteRelease(id) {
+            try {
+                const response = await fetch(`/api/releases/${id}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    fetchReleases();
+                } else {
+                    console.error('Error deleting release:', data.message);
+                }
+            } catch (error) {
+                console.error('Error deleting release:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSession();
+            document.getElementById('create-release-btn').addEventListener('click', createRelease);
+            document.getElementById('closeBtn').addEventListener('click', closePopup);
+        });
+
+        let isAdmin = false;
+    </script>
+</body>
+</html>

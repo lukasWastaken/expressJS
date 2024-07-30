@@ -17,8 +17,9 @@
             height: 100vh;
             margin: 0;
         }
-        a {
+        a, button {
             color: #ff79c6;
+            text-decoration: none;
         }
         .container {
             width: 80%;
@@ -50,11 +51,14 @@
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
-            text-decoration: none;
             display: inline-block;
         }
-        .button:hover {
+        .button:hover:not([disabled]) {
             background-color: #ff79c6;
+        }
+        .button[disabled] {
+            background-color: #3b3b3b;
+            cursor: not-allowed;
         }
         .popup {
             display: none;
@@ -89,13 +93,15 @@
             margin-bottom: 20px;
         }
         .header-button {
-            margin-right: 10px; /* Abstand zwischen Buttons */
+            margin-right: 10px;
         }
     </style>
 </head>
 <body>
     <header id="download-header">
         <a href="/status" class="button header-button">Status</a>
+        <a href="/releases" class="button header-button">Releases</a>
+ 
         <a href="/files/launcher-setup-1.1.exe" class="button">Download Launcher</a>
     </header>
     <div class="container">
@@ -190,23 +196,24 @@
         if (data.loggedIn) {
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('motd-section').style.display = 'block';
-            document.getElementById('download-header').style.display = 'flex'; // Show download button when logged in
+            document.getElementById('download-header').style.display = 'flex'; // Show download header for all logged-in users
+
             if (data.isTeam) {
                 document.getElementById('edit-motd-btn').style.display = 'block';
-                document.getElementById('download-header').style.display = 'flex'; // Zeige den "Status" Button nur, wenn eingeloggt
             } else {
-                document.getElementById('download-header').style.display = 'none'; // Verberge den "Status" Button für normale Benutzer
+                document.getElementById('edit-motd-btn').style.display = 'none'; // Hide edit button for non-admin users
             }
             fetchMOTD();
         } else {
             document.getElementById('motd-section').style.display = 'none';
             document.getElementById('login-section').style.display = 'block';
-            document.getElementById('download-header').style.display = 'none'; // Hide download button when not logged in
+            document.getElementById('download-header').style.display = 'none'; // Hide download header when not logged in
         }
     } catch (error) {
         console.error('Error checking session:', error);
     }
 }
+
 
 
         function formatLinks(text) {
