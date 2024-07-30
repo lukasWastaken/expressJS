@@ -7,16 +7,51 @@ const User = require('./models/User');
 const MOTD = require('./models/motd');
 
 const app = express();
+const RECONNECT_INTERVAL = 10000; // 10 Sekunden in Millisekunden
 
-mongoose.connect('mongodb://localhost:27017/squaresphere', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
+const dbUrl = "mongodb://localhost:27017/squaresphere"
+
+// Funktion zur Verbindung mit der Datenbank
+async function connectToDatabase() {
+  try {
+    await mongoose.connect(dbUrl, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('Error connecting to MongoDB:', error);
+    console.log(`Retrying in ${RECONNECT_INTERVAL / 1000} seconds...`);
+    setTimeout(connectToDatabase, RECONNECT_INTERVAL);
+  }
+}
+
+// Initialer Verbindungsversuch
+connectToDatabase();
+
+// Überprüfen der Verbindung bei jedem Request
+app.use((req, res, next) => {
+  if (mongoose.connection.readyState !== 1) { // 1 bedeutet verbunden
+    console.error('No MongoDB connection available.');
+  }
+  next();
 });
 
-//app.use((req, res, next) => {
-  //res.set('Cache-Control', 'no-store');
-  //next();
-//});
+
+app.get('/api/status/database', async (req, res) => {
+  try {
+    // Überprüfen Sie den aktuellen Verbindungsstatus
+    if (mongoose.connection.readyState === 1) { // 1 bedeutet verbunden
+      res.json({ status: 'operational' });
+    } else {
+      res.json({ status: 'down' });
+    }
+  } catch (error) {
+    console.error('Fehler beim Überprüfen der Datenbankverbindung:', error);
+    res.json({ status: 'down' });
+  }
+});
+
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -57,7 +92,7 @@ app.get('/test', (req, res) => {
   res.send("Server's running!");
 });
 
-app.get('/status', (req, res) => {
+app.get('/status', isAuthenticated, (req, res) => {
   res.render('status.html');
 });
 
@@ -132,12 +167,6 @@ app.get('/api/session', (req, res) => {
   } else {
     res.json({ loggedIn: false });
   }
-});
-
-// Aktualisiertes MOTD-Schema mit Timestamp-Feld
-const motdSchema = new mongoose.Schema({
-  text: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now }
 });
 
 app.get('/api/motd', async (req, res) => {

@@ -84,14 +84,18 @@
             margin-top: 10px;
         }
         header {
-            display: none; /* Initially hidden */
+            display: flex;
             justify-content: center;
             margin-bottom: 20px;
+        }
+        .header-button {
+            margin-right: 10px; /* Abstand zwischen Buttons */
         }
     </style>
 </head>
 <body>
     <header id="download-header">
+        <a href="/status" class="button header-button">Status</a>
         <a href="/files/launcher-setup-1.1.exe" class="button">Download Launcher</a>
     </header>
     <div class="container">
@@ -112,7 +116,7 @@
                 <button id="motd-save" class="button">Save</button>
                 <button id="motd-cancel" class="button">Cancel</button>
                 <button id="insert-day-btn" class="button">Insert Day</button>
-                <button id="clear-input-btn" class="button">Clear</button> <!-- Neuer Button -->
+                <button id="clear-input-btn" class="button">Clear</button>
             </div>
             <a id="logout-button" href="/logout">Logout</a>
         </div>
@@ -180,26 +184,30 @@
         }
 
         async function checkSession() {
-            try {
-                const response = await fetch('/api/session');
-                const data = await response.json();
-                if (data.loggedIn) {
-                    document.getElementById('login-section').style.display = 'none';
-                    document.getElementById('motd-section').style.display = 'block';
-                    document.getElementById('download-header').style.display = 'flex'; // Show download button when logged in
-                    if (data.isTeam) {
-                        document.getElementById('edit-motd-btn').style.display = 'block';
-                    }
-                    fetchMOTD();
-                } else {
-                    document.getElementById('motd-section').style.display = 'none';
-                    document.getElementById('login-section').style.display = 'block';
-                    document.getElementById('download-header').style.display = 'none'; // Hide download button when not logged in
-                }
-            } catch (error) {
-                console.error('Error checking session:', error);
+    try {
+        const response = await fetch('/api/session');
+        const data = await response.json();
+        if (data.loggedIn) {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('motd-section').style.display = 'block';
+            document.getElementById('download-header').style.display = 'flex'; // Show download button when logged in
+            if (data.isTeam) {
+                document.getElementById('edit-motd-btn').style.display = 'block';
+                document.getElementById('download-header').style.display = 'flex'; // Zeige den "Status" Button nur, wenn eingeloggt
+            } else {
+                document.getElementById('download-header').style.display = 'none'; // Verberge den "Status" Button für normale Benutzer
             }
+            fetchMOTD();
+        } else {
+            document.getElementById('motd-section').style.display = 'none';
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('download-header').style.display = 'none'; // Hide download button when not logged in
         }
+    } catch (error) {
+        console.error('Error checking session:', error);
+    }
+}
+
 
         function formatLinks(text) {
             const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g;
