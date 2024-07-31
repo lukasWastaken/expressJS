@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= release.title %></title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .release-details {
+            padding: 20px;
+            background-color: #f4f4f4;
+            border-radius: 8px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .back-button {
+            background-color: #bd93f9;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: block;
+            margin-bottom: 20px;
+        }
+        .back-button:hover {
+            background-color: #ff79c6;
+        }
+    </style>
+</head>
+<body>
+    <div class="release-details">
+        <button class="back-button" onclick="window.history.back()">Back</button>
+        <h1><%= release.title %></h1>
+        <p><strong>Channel:</strong> <%= release.channel %></p>
+        <p><strong>Public:</strong> <%= release.public ? 'Yes' : 'No' %></p>
+        <h3>Features:</h3>
+        <p><%= release.features.join('<br/>') %></p>
+        <h3>Bug Fixes:</h3>
+        <p><%= release.bugFixes.join('<br/>') %></p>
+        <h3>Known Issues:</h3>
+        <p><%= release.knownIssues.join('<br/>') %></p>
+    </div>
+</body>
+</html>
