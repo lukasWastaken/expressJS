@@ -340,6 +340,24 @@ app.delete('/api/releases/:id', async (req, res) => {
       res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
+
+/* Game Files */
+app.get('/files/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const options = {
+    root: path.join(__dirname, 'files')
+  };
+
+  res.sendFile(filename, options, (err) => {
+    if (err) {
+      console.error('Error sending file:', err);
+      res.status(err.status).end();
+    } else {
+      console.log('Sent:', filename);
+    }
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on  http://localhost:${PORT}`);
