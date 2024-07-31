@@ -53,6 +53,12 @@
             margin-bottom: 10px;
             background-color: #2b2b2b;
         }
+        .release.public {
+            border: 1px solid #bd93f9; /* Umrandung für öffentliche Releases */
+        }
+        .release.not-public {
+            border: 1px solid gray; /* Umrandung für nicht öffentliche Releases */
+        }
         .release h3 {
             color: #bd93f9;
             cursor: pointer;
@@ -140,12 +146,13 @@
         </div>
     </div>
 
-    <!-- Popup Form for Creating and Viewing Releases -->
+    <!-- Popup Form for Creating and Editing Releases -->
     <div id="popup" class="popup">
         <div class="popup-content">
             <span class="close-btn" id="closeBtn">&times;</span>
             <h2 id="popup-title">Add new Release</h2>
             <form id="releaseForm">
+                <input type="hidden" id="releaseId" name="releaseId">
                 <label for="title">Title:</label>
                 <input type="text" id="title" name="title" required>
                 
@@ -171,6 +178,7 @@
 
     <script>
         let isAdmin = false;
+        let currentReleaseId = null;
 
         async function fetchReleases() {
             try {
@@ -191,7 +199,7 @@
             releasesList.innerHTML = '';
             releases.forEach(release => {
                 const releaseElement = document.createElement('div');
-                releaseElement.className = 'release';
+                releaseElement.className = 'release ' + (release.public ? 'public' : 'not-public');
                 releaseElement.innerHTML = 
                     `<h3 onclick="redirectToRelease('${release._id}')">${release.title}</h3>
                     <p><strong>Channel:</strong> ${release.channel}</p>`;
@@ -232,6 +240,7 @@
         function openPopup(title) {
             document.getElementById('popup-title').textContent = title;
             document.getElementById('releaseForm').reset();
+            document.getElementById('releaseId').value = ''; // Reset the release ID
             document.getElementById('popup').style.display = 'block';
         }
 
@@ -240,44 +249,34 @@
         }
 
         async function saveRelease() {
+            const id = document.getElementById('releaseId').value;
             const title = document.getElementById('title').value;
             const channel = document.getElementById('channel').value;
             const publicRelease = document.getElementById('public').checked;
             const features = document.getElementById('features').value;
             const bugFixes = document.getElementById('bugFixes').value;
             const knownIssues = document.getElementById('knownIssues').value;
-
-            const newRelease = {
-                title,
-                channel,
-                public: publicRelease,
-                features,
-                bugFixes,
-                knownIssues
-            };
-
+            
             try {
-                const response = await fetch('/api/releases', {
-                    method: 'POST',
+                const response = await fetch(id ? `/api/releases/${id}` : '/api/releases', {
+                    method: id ? 'PUT' : 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(newRelease)
+                    body: JSON.stringify({
+                        title, channel, public: publicRelease, features, bugFixes, knownIssues
+                    })
                 });
                 const data = await response.json();
                 if (data.success) {
-                    fetchReleases();
                     closePopup();
+                    fetchReleases();
                 } else {
                     console.error('Error saving release:', data.message);
                 }
             } catch (error) {
                 console.error('Error saving release:', error);
             }
-        }
-
-        async function editRelease(id) {
-            // Implement edit functionality
         }
 
         async function deleteRelease(id) {
@@ -296,9 +295,32 @@
             }
         }
 
+        function editRelease(id) {
+            currentReleaseId = id;
+            openPopup('Edit Release');
+            // Load existing release data into the form
+            fetch(`/api/releases/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const release = data.release;
+                        document.getElementById('releaseId').value = release._id;
+                        document.getElementById('title').value = release.title;
+                        document.getElementById('channel').value = release.channel;
+                        document.getElementById('public').checked = release.public;
+                        document.getElementById('features').value = release.features;
+                        document.getElementById('bugFixes').value = release.bugFixes;
+                        document.getElementById('knownIssues').value = release.knownIssues;
+                    } else {
+                        console.error('Error loading release data:', data.message);
+                    }
+                })
+                .catch(error => console.error('Error loading release data:', error));
+        }
+
         document.getElementById('create-release-btn').addEventListener('click', () => openPopup('Add new Release'));
-        document.getElementById('closeBtn').addEventListener('click', closePopup);
         document.getElementById('saveReleaseBtn').addEventListener('click', saveRelease);
+        document.getElementById('closeBtn').addEventListener('click', closePopup);
 
         checkSession();
     </script>

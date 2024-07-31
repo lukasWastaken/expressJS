@@ -260,20 +260,6 @@ app.put('/api/releases/:id', isAuthenticated, isTeamMember, async (req, res) => 
   }
 });
 
-app.delete('/api/releases/:id', isAuthenticated, isTeamMember, async (req, res) => {
-  try {
-    const release = await Release.findById(req.params.id);
-    if (!release) {
-      return res.status(404).json({ success: false, message: 'Release not found' });
-    }
-
-    await release.remove();
-    res.json({ success: true, message: 'Release deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting release:', error);
-    res.status(500).json({ success: false, message: 'Server error, please try again later.' });
-  }
-});
 
 /* Admin routes */
 app.get('/admin', isAuthenticated, isAdmin, (req, res) => {
@@ -340,7 +326,20 @@ app.get('/api/releases/:id', async (req, res) => {
   }
 });
 
-
+app.delete('/api/releases/:id', async (req, res) => {
+  try {
+      const { id } = req.params;
+      const result = await Release.deleteOne({ _id: id });
+      if (result.deletedCount > 0) {
+          res.json({ success: true });
+      } else {
+          res.json({ success: false, message: 'Release not found' });
+      }
+  } catch (error) {
+      console.error('Error deleting release:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
