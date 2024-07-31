@@ -6,6 +6,46 @@
     <title>Releases</title>
     <link rel="stylesheet" href="/styles.css">
     <style>
+        body {
+            background-color: #1a1a1a;
+            color: #f8f8f2;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: #1a1a1a;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+        .header-button {
+            background-color: #bd93f9;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .header-button:hover {
+            background-color: #ff79c6;
+        }
+        #search-bar {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #bd93f9;
+            background-color: #2b2b2b;
+            color: #f8f8f2;
+        }
+        .container {
+            margin-top: 60px; /* Platz für den festen Header */
+            padding: 20px;
+        }
         .release {
             border: 1px solid #bd93f9;
             border-radius: 10px;
@@ -35,7 +75,6 @@
         .admin-buttons button:hover {
             background-color: #ff79c6;
         }
-        /* Popup Styles */
         .popup {
             display: none;
             position: fixed;
@@ -47,8 +86,8 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             z-index: 1000;
-            width: 80%; /* Increase popup width */
-            max-width: 800px; /* Max width */
+            width: 80%;
+            max-width: 800px;
         }
         .popup-content {
             display: flex;
@@ -86,47 +125,18 @@
             color: #ff79c6;
             font-size: 20px;
         }
-        /* Header Styles */
-        header {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-            background-color: #1a1a1a;
-        }
-        .header-button {
-            background-color: #bd93f9;
-            color: #1a1a1a;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        .header-button:hover {
-            background-color: #ff79c6;
-        }
-        #search-bar {
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #bd93f9;
-            background-color: #2b2b2b;
-            color: #f8f8f2;
-        }
     </style>
 </head>
 <body>
     <header>
-        <div class="header">
-            <input type="search" placeholder="Search releases...">
-            <button onclick="location.href='/'">Home</button>
-        </div>
+        <input type="search" id="search-bar" placeholder="Search releases...">
+        <button class="header-button" onclick="location.href='/'">Home</button>
     </header>
     <div class="container">
         <h1>Releases</h1>
         <div id="releases-list"></div>
         <div id="admin-controls" style="display: none;">
-            <button id="create-release-btn" class="button">Create New Release</button>
+            <button id="create-release-btn" class="header-button">Create New Release</button>
         </div>
     </div>
 
@@ -142,8 +152,8 @@
                 <label for="channel">Channel:</label>
                 <input type="text" id="channel" name="channel" required>
                 
-                <label for="evocati">Evocati:</label>
-                <input type="checkbox" id="evocati" name="evocati">
+                <label for="public">Public:</label>
+                <input type="checkbox" id="public" name="public">
                 
                 <label for="features">Features:</label>
                 <textarea id="features" name="features" required></textarea>
@@ -182,17 +192,15 @@
             releases.forEach(release => {
                 const releaseElement = document.createElement('div');
                 releaseElement.className = 'release';
-                releaseElement.innerHTML = `
-                    <h3 onclick="redirectToRelease('${release._id}')">${release.title}</h3>
-                    <p><strong>Channel:</strong> ${release.channel}</p>
-                `;
+                releaseElement.innerHTML = 
+                    `<h3 onclick="redirectToRelease('${release._id}')">${release.title}</h3>
+                    <p><strong>Channel:</strong> ${release.channel}</p>`;
                 if (isAdmin) {
                     const adminButtons = document.createElement('div');
                     adminButtons.className = 'admin-buttons';
-                    adminButtons.innerHTML = `
-                        <button onclick="editRelease('${release._id}')">Edit</button>
-                        <button onclick="deleteRelease('${release._id}')">Delete</button>
-                    `;
+                    adminButtons.innerHTML = 
+                        `<button onclick="editRelease('${release._id}')">Edit</button>
+                        <button onclick="deleteRelease('${release._id}')">Delete</button>`;
                     releaseElement.appendChild(adminButtons);
                 }
                 releasesList.appendChild(releaseElement);
@@ -223,7 +231,7 @@
 
         function openPopup(title) {
             document.getElementById('popup-title').textContent = title;
-            document.getElementById('releaseForm').reset(); // Clear the form
+            document.getElementById('releaseForm').reset();
             document.getElementById('popup').style.display = 'block';
         }
 
@@ -234,7 +242,7 @@
         async function saveRelease() {
             const title = document.getElementById('title').value;
             const channel = document.getElementById('channel').value;
-            const evocati = document.getElementById('evocati').checked;
+            const publicRelease = document.getElementById('public').checked;
             const features = document.getElementById('features').value;
             const bugFixes = document.getElementById('bugFixes').value;
             const knownIssues = document.getElementById('knownIssues').value;
@@ -242,7 +250,7 @@
             const newRelease = {
                 title,
                 channel,
-                evocati,
+                public: publicRelease,
                 features,
                 bugFixes,
                 knownIssues
@@ -258,14 +266,18 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    closePopup();
                     fetchReleases();
+                    closePopup();
                 } else {
                     console.error('Error saving release:', data.message);
                 }
             } catch (error) {
                 console.error('Error saving release:', error);
             }
+        }
+
+        async function editRelease(id) {
+            // Implement edit functionality
         }
 
         async function deleteRelease(id) {
@@ -284,48 +296,11 @@
             }
         }
 
-        async function editRelease(id) {
-            try {
-                const response = await fetch(`/api/releases/${id}`);
-                const data = await response.json();
-                if (data.success) {
-                    const release = data.release;
-                    openPopup('Edit Release');
-                    document.getElementById('title').value = release.title;
-                    document.getElementById('channel').value = release.channel;
-                    document.getElementById('evocati').checked = release.evocati;
-                    document.getElementById('features').value = release.features;
-                    document.getElementById('bugFixes').value = release.bugFixes;
-                    document.getElementById('knownIssues').value = release.knownIssues;
-                } else {
-                    console.error('Error fetching release details:', data.message);
-                }
-            } catch (error) {
-                console.error('Error fetching release details:', error);
-            }
-        }
-
-        function searchReleases() {
-            const input = document.getElementById('search-bar');
-            const filter = input.value.toLowerCase();
-            const releasesList = document.getElementById('releases-list');
-            const releases = releasesList.getElementsByClassName('release');
-
-            Array.from(releases).forEach(release => {
-                const title = release.getElementsByTagName('h3')[0];
-                if (title.textContent.toLowerCase().indexOf(filter) > -1) {
-                    release.style.display = '';
-                } else {
-                    release.style.display = 'none';
-                }
-            });
-        }
-
         document.getElementById('create-release-btn').addEventListener('click', () => openPopup('Add new Release'));
         document.getElementById('closeBtn').addEventListener('click', closePopup);
         document.getElementById('saveReleaseBtn').addEventListener('click', saveRelease);
 
-        window.onload = checkSession;
+        checkSession();
     </script>
 </body>
 </html>

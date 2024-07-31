@@ -202,7 +202,7 @@ app.post('/api/motd', isAuthenticated, isTeamMember, async (req, res) => {
 /* Release Routes */
 app.get('/releases', isAuthenticated, async (req, res) => {
   try {
-    const releases = await Release.find().sort({ timestamp: -1 });
+    const releases = await Release.find({ $or: [{ public: true }, { public: false, user: req.session.userId }] }).sort({ timestamp: -1 });
     res.render('releases.html', { releases, isAdmin: req.session.isTeam });
   } catch (error) {
     console.error('Error fetching releases:', error);
@@ -213,7 +213,7 @@ app.get('/releases', isAuthenticated, async (req, res) => {
 app.get('/releases/:id', isAuthenticated, async (req, res) => {
   try {
     const release = await Release.findById(req.params.id);
-    if (!release) {
+    if (!release || (!release.public && !req.session.isTeam)) {
       return res.status(404).send('Release not found');
     }
     res.render('release-details.html', { release });
@@ -224,10 +224,10 @@ app.get('/releases/:id', isAuthenticated, async (req, res) => {
 });
 
 app.post('/api/releases', isAuthenticated, isTeamMember, async (req, res) => {
-  const { title, channel, evocati, features, bugFixes, knownIssues } = req.body;
+  const { title, channel, public, features, bugFixes, knownIssues } = req.body;
 
   try {
-    const newRelease = new Release({ title, channel, evocati, features, bugFixes, knownIssues });
+    const newRelease = new Release({ title, channel, public, features, bugFixes, knownIssues });
     await newRelease.save();
     res.json({ success: true, message: 'Release created successfully' });
   } catch (error) {
@@ -237,13 +237,22 @@ app.post('/api/releases', isAuthenticated, isTeamMember, async (req, res) => {
 });
 
 app.put('/api/releases/:id', isAuthenticated, isTeamMember, async (req, res) => {
-  const { title, channel, evocati, features, bugFixes, knownIssues } = req.body;
+  const { title, channel, public, features, bugFixes, knownIssues } = req.body;
 
   try {
-    const release = await Release.findByIdAndUpdate(req.params.id, { title, channel, evocati, features, bugFixes, knownIssues }, { new: true });
+    const release = await Release.findById(req.params.id);
     if (!release) {
       return res.status(404).json({ success: false, message: 'Release not found' });
     }
+
+    release.title = title;
+    release.channel = channel;
+    release.public = public;
+    release.features = features;
+    release.bugFixes = bugFixes;
+    release.knownIssues = knownIssues;
+
+    await release.save();
     res.json({ success: true, message: 'Release updated successfully' });
   } catch (error) {
     console.error('Error updating release:', error);
@@ -253,10 +262,12 @@ app.put('/api/releases/:id', isAuthenticated, isTeamMember, async (req, res) => 
 
 app.delete('/api/releases/:id', isAuthenticated, isTeamMember, async (req, res) => {
   try {
-    const release = await Release.findByIdAndDelete(req.params.id);
+    const release = await Release.findById(req.params.id);
     if (!release) {
       return res.status(404).json({ success: false, message: 'Release not found' });
     }
+
+    await release.remove();
     res.json({ success: true, message: 'Release deleted successfully' });
   } catch (error) {
     console.error('Error deleting release:', error);
@@ -264,23 +275,73 @@ app.delete('/api/releases/:id', isAuthenticated, isTeamMember, async (req, res) 
   }
 });
 
-/* Game Files */
-app.get('/files/:filename', (req, res) => {
-  const filename = req.params.filename;
-  const options = {
-    root: path.join(__dirname, 'files')
-  };
-
-  res.sendFile(filename, options, (err) => {
-    if (err) {
-      console.error('Error sending file:', err);
-      res.status(err.status).end();
-    } else {
-      console.log('Sent:', filename);
-    }
-  });
+/* Admin routes */
+app.get('/admin', isAuthenticated, isAdmin, (req, res) => {
+  res.render('admin.html');
 });
 
-app.listen(3000, () => {
-  console.log('Server started on  http://localhost:3000');
+/* Admin: Manage Users */
+app.get('/admin/users', isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const users = await User.find();
+    res.render('admin-users.html', { users });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).send('Server error, please try again later.');
+  }
+});
+
+/* Admin: Manage Releases */
+app.get('/admin/releases', isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const releases = await Release.find().sort({ timestamp: -1 });
+    res.render('admin-releases.html', { releases });
+  } catch (error) {
+    console.error('Error fetching releases:', error);
+    res.status(500).send('Server error, please try again later.');
+  }
+});
+
+/* Admin: Manage MOTD */
+app.get('/admin/motd', isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const motd = await MOTD.findOne();
+    res.render('admin-motd.html', { motd: motd ? motd.text : '' });
+  } catch (error) {
+    console.error('Error fetching MOTD:', error);
+    res.status(500).send('Server error, please try again later.');
+  }
+});
+
+app.get('/api/releases', async (req, res) => {
+  try {
+    const isAdmin = req.session.isTeam;
+    const query = isAdmin ? {} : { public: true };
+    const releases = await Release.find(query).sort({ timestamp: -1 });
+    res.json({ success: true, releases });
+  } catch (error) {
+    console.error('Error fetching releases:', error);
+    res.status(500).json({ success: false, message: 'Server error, please try again later.' });
+  }
+});
+
+// Um die Detailansicht anzupassen:
+app.get('/api/releases/:id', async (req, res) => {
+  try {
+    const isAdmin = req.session.isTeam;
+    const release = await Release.findById(req.params.id);
+    if (!release || (!release.public && !isAdmin)) {
+      return res.status(404).send('Release not found');
+    }
+    res.json({ success: true, release });
+  } catch (error) {
+    console.error('Error fetching release:', error);
+    res.status(500).send('Server error, please try again later.');
+  }
+});
+
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
