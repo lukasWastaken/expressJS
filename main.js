@@ -30,6 +30,20 @@ async function connectToDatabase() {
 // Initialer Verbindungsversuch
 connectToDatabase();
 
+app.get('/api/status/database', async (req, res) => {
+  try {
+    // Überprüfen Sie den aktuellen Verbindungsstatus
+    if (mongoose.connection.readyState === 1) { // 1 bedeutet verbunden
+      res.json({ status: 'operational' });
+    } else {
+      res.json({ status: 'down' });
+    }
+  } catch (error) {
+    console.error('Fehler beim Überprüfen der Datenbankverbindung:', error);
+    res.json({ status: 'down' });
+  }
+});
+
 // Überprüfen der Verbindung bei jedem Request
 app.use((req, res, next) => {
   if (mongoose.connection.readyState !== 1) { // 1 bedeutet verbunden
@@ -254,7 +268,7 @@ app.delete('/api/releases/:id', isAuthenticated, isTeamMember, async (req, res) 
 app.get('/files/:filename', (req, res) => {
   const filename = req.params.filename;
   const options = {
-    root: path.join(__dirname, 'public', 'files')
+    root: path.join(__dirname, 'files')
   };
 
   res.sendFile(filename, options, (err) => {
