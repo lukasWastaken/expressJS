@@ -10,7 +10,7 @@ const Release = require('./models/Release'); // Neues Modell
 const app = express();
 const RECONNECT_INTERVAL = 10000; // 10 Sekunden in Millisekunden
 
-const dbUrl = "mongodb://localhost:27017/squaresphere"
+const dbUrl = "mongodb://localhost:27017/squaresphere";
 
 // Funktion zur Verbindung mit der Datenbank
 async function connectToDatabase() {
@@ -105,9 +105,7 @@ app.get('/status', isAuthenticated, (req, res) => {
   res.render('status.html');
 });
 
-/*
-Login start
-*/
+/* Login routes */
 app.get('/register', (req, res) => {
   res.render('register.html');
 });
@@ -165,11 +163,7 @@ app.get('/logout', (req, res) => {
   });
 });
 
-/*
-Login end
-*/
-
-/* MOTD Routes start */
+/* MOTD Routes */
 app.get('/api/session', (req, res) => {
   if (req.session.userId) {
     res.json({ loggedIn: true, isTeam: req.session.isTeam });
@@ -188,7 +182,6 @@ app.get('/api/motd', async (req, res) => {
   }
 });
 
-// Route zum Speichern des MOTD
 app.post('/api/motd', isAuthenticated, isTeamMember, async (req, res) => {
   const { text } = req.body;
   try {
@@ -207,9 +200,8 @@ app.post('/api/motd', isAuthenticated, isTeamMember, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error, please try again later.' });
   }
 });
-/* MOTD Routes end */
 
-/* Release Routes start */
+/* Release Routes */
 app.get('/releases', isAuthenticated, async (req, res) => {
   try {
     const releases = await Release.find().sort({ timestamp: -1 });
@@ -227,6 +219,19 @@ app.get('/api/releases', async (req, res) => {
   } catch (error) {
     console.error('Error fetching releases:', error);
     res.status(500).json({ success: false, message: 'Server error, please try again later.' });
+  }
+});
+
+app.get('/api/releases/:id', async (req, res) => {
+  try {
+    const release = await Release.findById(req.params.id);
+    if (!release) {
+      return res.status(404).json({ success: false, message: 'Release not found' });
+    }
+    res.json({ success: true, release });
+  } catch (error) {
+    console.error('Error fetching release:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
@@ -268,9 +273,8 @@ app.delete('/api/releases/:id', isAuthenticated, isAdmin, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error, please try again later.' });
   }
 });
-/* Release Routes end */
 
-/*Game Files start*/ 
+/* Game Files */
 app.get('/files/:filename', (req, res) => {
   const filename = req.params.filename;
   const options = {
@@ -291,7 +295,6 @@ app.get('/files/:filename', (req, res) => {
     }
   });
 });
-/*Game Files end*/ 
 
 app.listen(3000, () => {
   console.log('Server is running on port 3000');

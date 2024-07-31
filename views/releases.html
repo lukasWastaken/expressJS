@@ -128,6 +128,8 @@
     </div>
 
     <script>
+        let isAdmin = false;
+
         async function fetchReleases() {
             try {
                 const response = await fetch('/api/releases');
@@ -183,17 +185,13 @@
             }
         }
 
-        async function createRelease() {
-            document.getElementById('popup-title').textContent = 'Neuen Release hinzufügen';
-            document.getElementById('releaseForm').reset();
-            document.getElementById('saveReleaseBtn').setAttribute('onclick', 'saveRelease()');
-            const popup = document.getElementById('popup');
-            popup.style.display = 'block';
+        function openPopup(title) {
+            document.getElementById('popup-title').textContent = title;
+            document.getElementById('popup').style.display = 'block';
         }
 
         function closePopup() {
-            const popup = document.getElementById('popup');
-            popup.style.display = 'none';
+            document.getElementById('popup').style.display = 'none';
         }
 
         async function saveRelease() {
@@ -236,24 +234,30 @@
         async function showReleaseDetails(id) {
             try {
                 const response = await fetch(`/api/releases/${id}`);
-                const release = await response.json();
-                if (release.success) {
-                    document.getElementById('popup-title').textContent = release.title;
+                if (!response.ok) {
+                    throw new Error('Release not found');
+                }
+                const data = await response.json();
+                if (data.success) {
+                    const release = data.release;
+                    openPopup(release.title);
                     document.getElementById('title').value = release.title;
                     document.getElementById('channel').value = release.channel;
                     document.getElementById('evocati').checked = release.evocati;
                     document.getElementById('features').value = release.features;
                     document.getElementById('bugFixes').value = release.bugFixes;
                     document.getElementById('knownIssues').value = release.knownIssues;
-                    document.getElementById('saveReleaseBtn').setAttribute('onclick', `saveEditedRelease('${release._id}')`);
-                    const popup = document.getElementById('popup');
-                    popup.style.display = 'block';
+                    document.getElementById('saveReleaseBtn').setAttribute('onclick', `saveEditedRelease('${id}')`);
                 } else {
-                    console.error('Error fetching release details:', release.message);
+                    console.error('Error fetching release details:', data.message);
                 }
             } catch (error) {
                 console.error('Error fetching release details:', error);
             }
+        }
+
+        async function editRelease(id) {
+            showReleaseDetails(id);
         }
 
         async function saveEditedRelease(id) {
@@ -293,33 +297,32 @@
             }
         }
 
-        async function editRelease(id) {
-            showReleaseDetails(id);
-        }
-
         async function deleteRelease(id) {
-            try {
-                const response = await fetch(`/api/releases/${id}`, {
-                    method: 'DELETE'
-                });
-                const data = await response.json();
-                if (data.success) {
-                    fetchReleases();
-                } else {
-                    console.error('Error deleting release:', data.message);
+            if (confirm('Sind Sie sicher, dass Sie diesen Release löschen möchten?')) {
+                try {
+                    const response = await fetch(`/api/releases/${id}`, {
+                        method: 'DELETE'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        fetchReleases();
+                    } else {
+                        console.error('Error deleting release:', data.message);
+                    }
+                } catch (error) {
+                    console.error('Error deleting release:', error);
                 }
-            } catch (error) {
-                console.error('Error deleting release:', error);
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             checkSession();
-            document.getElementById('create-release-btn').addEventListener('click', createRelease);
+            document.getElementById('create-release-btn').addEventListener('click', () => {
+                openPopup('Neuen Release hinzufügen');
+                document.getElementById('saveReleaseBtn').setAttribute('onclick', 'saveRelease()');
+            });
             document.getElementById('closeBtn').addEventListener('click', closePopup);
         });
-
-        let isAdmin = false;
     </script>
 </body>
 </html>
