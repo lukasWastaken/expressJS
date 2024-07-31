@@ -20,7 +20,7 @@
             background-color: #1a1a1a;
             padding: 10px;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
             z-index: 1000;
         }
@@ -34,13 +34,6 @@
         }
         .header-button:hover {
             background-color: #ff79c6;
-        }
-        #search-bar {
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #bd93f9;
-            background-color: #2b2b2b;
-            color: #f8f8f2;
         }
         .container {
             margin-top: 60px; /* Platz für den festen Header */
@@ -94,6 +87,8 @@
             z-index: 1000;
             width: 80%;
             max-width: 800px;
+            overflow-y: auto; /* Scrollen im Popup erlauben */
+            max-height: 80vh; /* Maximale Höhe für das Popup */
         }
         .popup-content {
             display: flex;
@@ -131,11 +126,22 @@
             color: #ff79c6;
             font-size: 20px;
         }
+        .share-button {
+            background-color: #bd93f9;
+            color: #1a1a1a;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .share-button:hover {
+            background-color: #ff79c6;
+        }
     </style>
 </head>
 <body>
     <header>
-        <input type="search" id="search-bar" placeholder="Search releases...">
         <button class="header-button" onclick="location.href='/'">Home</button>
     </header>
     <div class="container">
@@ -180,9 +186,9 @@
         let isAdmin = false;
         let currentReleaseId = null;
 
-        async function fetchReleases() {
+        async function fetchReleases(query = '') {
             try {
-                const response = await fetch('/api/releases');
+                const response = await fetch(`/api/releases${query ? `?search=${query}` : ''}`);
                 const data = await response.json();
                 if (data.success) {
                     displayReleases(data.releases);
@@ -207,7 +213,8 @@
                     const adminButtons = document.createElement('div');
                     adminButtons.className = 'admin-buttons';
                     adminButtons.innerHTML = 
-                        `<button onclick="editRelease('${release._id}')">Edit</button>
+                        `<button class="share-button" onclick="shareRelease('${release._id}')">Share</button>
+                        <button onclick="editRelease('${release._id}')">Edit</button>
                         <button onclick="deleteRelease('${release._id}')">Delete</button>`;
                     releaseElement.appendChild(adminButtons);
                 }
@@ -256,21 +263,21 @@
             const features = document.getElementById('features').value;
             const bugFixes = document.getElementById('bugFixes').value;
             const knownIssues = document.getElementById('knownIssues').value;
-            
+
+            const releaseData = { title, channel, public: publicRelease, features, bugFixes, knownIssues };
+
             try {
-                const response = await fetch(id ? `/api/releases/${id}` : '/api/releases', {
+                const response = await fetch(`/api/releases${id ? `/${id}` : ''}`, {
                     method: id ? 'PUT' : 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        title, channel, public: publicRelease, features, bugFixes, knownIssues
-                    })
+                    body: JSON.stringify(releaseData),
                 });
                 const data = await response.json();
                 if (data.success) {
-                    closePopup();
                     fetchReleases();
+                    closePopup();
                 } else {
                     console.error('Error saving release:', data.message);
                 }
@@ -279,26 +286,7 @@
             }
         }
 
-        async function deleteRelease(id) {
-            try {
-                const response = await fetch(`/api/releases/${id}`, {
-                    method: 'DELETE'
-                });
-                const data = await response.json();
-                if (data.success) {
-                    fetchReleases();
-                } else {
-                    console.error('Error deleting release:', data.message);
-                }
-            } catch (error) {
-                console.error('Error deleting release:', error);
-            }
-        }
-
         function editRelease(id) {
-            currentReleaseId = id;
-            openPopup('Edit Release');
-            // Load existing release data into the form
             fetch(`/api/releases/${id}`)
                 .then(response => response.json())
                 .then(data => {
@@ -311,16 +299,42 @@
                         document.getElementById('features').value = release.features;
                         document.getElementById('bugFixes').value = release.bugFixes;
                         document.getElementById('knownIssues').value = release.knownIssues;
+                        openPopup('Edit Release');
                     } else {
-                        console.error('Error loading release data:', data.message);
+                        console.error('Error fetching release:', data.message);
                     }
                 })
-                .catch(error => console.error('Error loading release data:', error));
+                .catch(error => console.error('Error fetching release:', error));
         }
 
-        document.getElementById('create-release-btn').addEventListener('click', () => openPopup('Add new Release'));
-        document.getElementById('saveReleaseBtn').addEventListener('click', saveRelease);
+        async function deleteRelease(id) {
+            if (confirm('Are you sure you want to delete this release?')) {
+                try {
+                    const response = await fetch(`/api/releases/${id}`, {
+                        method: 'DELETE',
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        fetchReleases();
+                    } else {
+                        console.error('Error deleting release:', data.message);
+                    }
+                } catch (error) {
+                    console.error('Error deleting release:', error);
+                }
+            }
+        }
+
+        function shareRelease(id) {
+            const releaseUrl = `${window.location.origin}/releases/${id}`;
+            navigator.clipboard.writeText(releaseUrl)
+                .then(() => alert('Release link copied to clipboard'))
+                .catch(err => console.error('Error copying text: ', err));
+        }
+
+        document.getElementById('create-release-btn').addEventListener('click', () => openPopup('Add New Release'));
         document.getElementById('closeBtn').addEventListener('click', closePopup);
+        document.getElementById('saveReleaseBtn').addEventListener('click', saveRelease);
 
         checkSession();
     </script>

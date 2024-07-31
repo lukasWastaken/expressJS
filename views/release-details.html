@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Release Detail</title>
+    <title>Release Details</title>
     <link rel="stylesheet" href="/styles.css">
     <style>
         body {
@@ -39,42 +39,73 @@
             margin-top: 60px; /* Platz für den festen Header */
             padding: 20px;
         }
-        .release-detail {
-            background-color: #2b2b2b;
-            border-radius: 10px;
-            padding: 20px;
-            border: 1px solid #bd93f9;
+        .share-button {
+            background-color: #bd93f9;
+            color: #1a1a1a;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
         }
-        .release-detail h1 {
+        .share-button:hover {
+            background-color: #ff79c6;
+        }
+        h1 {
             color: #bd93f9;
         }
-        .release-detail p {
-            margin: 10px 0;
-            white-space: pre-wrap; /* Beibehaltung von Leerzeichen und Zeilenumbrüchen */
+        p {
+            line-height: 1.6;
         }
-        .release-detail .public-label {
-            font-weight: bold;
+        .category-box {
+            border: 1px solid #bd93f9;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #2b2b2b;
+        }
+        .category-box h2 {
+            margin-top: 0;
+            color: #bd93f9;
         }
     </style>
 </head>
 <body>
     <header>
         <button class="header-button" onclick="location.href='/releases'">Back to Releases</button>
+        <button class="share-button" id="share-btn">Share</button>
     </header>
     <div class="container">
-        <div class="release-detail" id="releaseDetail">
-            <!-- Release details will be injected here -->
+        <h1 id="release-title"></h1>
+        <p><strong>Channel:</strong> <span id="release-channel"></span></p>
+        <div class="category-box">
+            <h2>Features</h2>
+            <p id="release-features"></p>
+        </div>
+        <div class="category-box">
+            <h2>Bug Fixes</h2>
+            <p id="release-bug-fixes"></p>
+        </div>
+        <div class="category-box">
+            <h2>Known Issues</h2>
+            <p id="release-known-issues"></p>
         </div>
     </div>
 
     <script>
         async function fetchReleaseDetails() {
-            const id = window.location.pathname.split('/').pop();
+            const urlParts = window.location.pathname.split('/');
+            const releaseId = urlParts[urlParts.length - 1];
+
             try {
-                const response = await fetch(`/api/releases/${id}`);
+                const response = await fetch(`/api/releases/${releaseId}`);
                 const data = await response.json();
                 if (data.success) {
-                    displayReleaseDetails(data.release);
+                    const release = data.release;
+                    document.getElementById('release-title').textContent = release.title;
+                    document.getElementById('release-channel').textContent = release.channel;
+                    document.getElementById('release-features').textContent = release.features;
+                    document.getElementById('release-bug-fixes').textContent = release.bugFixes;
+                    document.getElementById('release-known-issues').textContent = release.knownIssues;
                 } else {
                     console.error('Error fetching release details:', data.message);
                 }
@@ -83,16 +114,14 @@
             }
         }
 
-        function displayReleaseDetails(release) {
-            const releaseDetail = document.getElementById('releaseDetail');
-            releaseDetail.innerHTML = 
-                `<h1>${release.title}</h1>
-                <p><strong>Channel:</strong> ${release.channel}</p>
-                <p class="public-label">Public: ${release.public ? 'Yes' : 'No'}</p>
-                <p><strong>Features:</strong><br>${release.features}</p>
-                <p><strong>Bug fixes:</strong><br>${release.bugFixes}</p>
-                <p><strong>Known issues:</strong><br>${release.knownIssues}</p>`;
+        function shareRelease() {
+            const releaseUrl = window.location.href;
+            navigator.clipboard.writeText(releaseUrl)
+                .then(() => alert('Release link copied to clipboard'))
+                .catch(err => console.error('Error copying text: ', err));
         }
+
+        document.getElementById('share-btn').addEventListener('click', shareRelease);
 
         fetchReleaseDetails();
     </script>
