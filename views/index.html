@@ -97,7 +97,7 @@
         }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false";>
     <header id="download-header">
         <a href="/status" class="button header-button">Status</a>
         <a href="/releases" class="button header-button">Releases</a>
@@ -264,6 +264,7 @@
             document.getElementById('insert-day-btn').addEventListener('click', insertDayAtCursor);
             document.getElementById('clear-input-btn').addEventListener('click', clearInput); // Event-Listener für den Clear Button
         });
+        
     </script>
      <footer>
         <p>&copy; 2024 SquareSphere. All rights reserved.</p>
