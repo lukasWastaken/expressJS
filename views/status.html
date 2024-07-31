@@ -29,7 +29,7 @@
     .status-operational {
       color: green;
     }
-    .status-down {
+    .status-error {
       color: red;
     }
     .back-button {
@@ -71,7 +71,7 @@
       <span id="route-motd-status" class="status-operational">Operational ✓</span>
     </div>
     <div class="status-item">
-      <span class="status-name">File download</span>
+      <span class="status-name">File errorload</span>
       <span id="route-files-status" class="status-operational">Operational ✓</span>
     </div>
     <div class="status-item">
@@ -88,8 +88,8 @@
         statusElement.className = 'status-operational';
         statusElement.textContent = 'Operational ✓';
       } else {
-        statusElement.className = 'status-down';
-        statusElement.textContent = 'Down ✕';
+        statusElement.className = 'status-error';
+        statusElement.textContent = 'Error ✕';
       }
     }
 
@@ -100,7 +100,7 @@
         updateStatus('db-status', data.status);
       })
       .catch(error => {
-        updateStatus('db-status', 'down');
+        updateStatus('db-status', 'error');
       });
 
     // Check route statuses
@@ -119,11 +119,11 @@
           if (response.ok) {
             updateStatus(route.id, 'operational');
           } else {
-            updateStatus(route.id, 'down');
+            updateStatus(route.id, 'error');
           }
         })
         .catch(error => {
-          updateStatus(route.id, 'down');
+          updateStatus(route.id, 'error');
         });
     });
   </script>
