@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Release Details</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .release-details {
+            padding: 30px; /* Vergrößert den inneren Abstand */
+            background-color: #2b2b2b;
+            border-radius: 10px;
+            color: #f8f8f2;
+            max-width: 800px; /* Optional, für eine maximale Breite */
+            margin: 20px auto; /* Zentriert die Box */
+        }
+        .release-details h2 {
+            color: #bd93f9;
+            font-size: 1.5em; /* Erhöht die Schriftgröße der Überschrift */
+        }
+        .release-details p {
+            margin: 15px 0; /* Erhöht den Abstand zwischen den Absätzen */
+            font-size: 1.1em; /* Erhöht die Schriftgröße der Absätze */
+        }
+        .button {
+            background-color: #bd93f9;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .button:hover {
+            background-color: #ff79c6;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/releases" class="button header-button">Back</a>
+    </header>
+    <div class="release-details">
+        <h2><%= release.title %></h2>
+        <p><strong>Channel:</strong> <%= release.channel %></p>
+        <p><strong>Evocati:</strong> <%= release.evocati ? 'Yes' : 'No' %></p>
+        <p><strong>Features:</strong> <%= release.features %></p>
+        <p><strong>Bug Fixes:</strong> <%= release.bugFixes %></p>
+        <p><strong>Known Issues:</strong> <%= release.knownIssues %></p>
+    </div>
+</body>
+</html>

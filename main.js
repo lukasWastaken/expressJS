@@ -202,12 +202,26 @@ app.post('/api/motd', isAuthenticated, isTeamMember, async (req, res) => {
 });
 
 /* Release Routes */
+/* Release Routes */
 app.get('/releases', isAuthenticated, async (req, res) => {
   try {
     const releases = await Release.find().sort({ timestamp: -1 });
     res.render('releases.html', { releases, isAdmin: req.session.isTeam });
   } catch (error) {
     console.error('Error fetching releases:', error);
+    res.status(500).send('Server error, please try again later.');
+  }
+});
+
+app.get('/releases/:id', isAuthenticated, async (req, res) => {
+  try {
+    const release = await Release.findById(req.params.id);
+    if (!release) {
+      return res.status(404).send('Release not found');
+    }
+    res.render('release-details.html', { release });
+  } catch (error) {
+    console.error('Error fetching release:', error);
     res.status(500).send('Server error, please try again later.');
   }
 });
@@ -232,45 +246,6 @@ app.get('/api/releases/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching release:', error);
     res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
-
-app.post('/api/releases', isAuthenticated, isAdmin, async (req, res) => {
-  const { title, channel, evocati, features, bugFixes, knownIssues } = req.body;
-  try {
-    const release = new Release({ title, channel, evocati, features, bugFixes, knownIssues });
-    await release.save();
-    res.json({ success: true, message: 'Release created successfully' });
-  } catch (error) {
-    console.error('Error creating release:', error);
-    res.status(500).json({ success: false, message: 'Server error, please try again later.' });
-  }
-});
-
-app.put('/api/releases/:id', isAuthenticated, isAdmin, async (req, res) => {
-  const { title, channel, evocati, features, bugFixes, knownIssues } = req.body;
-  try {
-    const release = await Release.findByIdAndUpdate(req.params.id, { title, channel, evocati, features, bugFixes, knownIssues }, { new: true });
-    if (!release) {
-      return res.status(404).json({ success: false, message: 'Release not found' });
-    }
-    res.json({ success: true, message: 'Release updated successfully', release });
-  } catch (error) {
-    console.error('Error updating release:', error);
-    res.status(500).json({ success: false, message: 'Server error, please try again later.' });
-  }
-});
-
-app.delete('/api/releases/:id', isAuthenticated, isAdmin, async (req, res) => {
-  try {
-    const release = await Release.findByIdAndDelete(req.params.id);
-    if (!release) {
-      return res.status(404).json({ success: false, message: 'Release not found' });
-    }
-    res.json({ success: true, message: 'Release deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting release:', error);
-    res.status(500).json({ success: false, message: 'Server error, please try again later.' });
   }
 });
 
