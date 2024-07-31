@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const User = require('./models/User');
 const MOTD = require('./models/motd');
-const Release = require('./models/Release'); // Neues Modell
+const Release = require('./models/Release');
 
 const app = express();
 const RECONNECT_INTERVAL = 10000; // 10 Sekunden in Millisekunden
@@ -37,22 +37,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-
-app.get('/api/status/database', async (req, res) => {
-  try {
-    // Überprüfen Sie den aktuellen Verbindungsstatus
-    if (mongoose.connection.readyState === 1) { // 1 bedeutet verbunden
-      res.json({ status: 'operational' });
-    } else {
-      res.json({ status: 'down' });
-    }
-  } catch (error) {
-    console.error('Fehler beim Überprüfen der Datenbankverbindung:', error);
-    res.json({ status: 'down' });
-  }
-});
-
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -202,7 +186,6 @@ app.post('/api/motd', isAuthenticated, isTeamMember, async (req, res) => {
 });
 
 /* Release Routes */
-/* Release Routes */
 app.get('/releases', isAuthenticated, async (req, res) => {
   try {
     const releases = await Release.find().sort({ timestamp: -1 });
@@ -226,26 +209,44 @@ app.get('/releases/:id', isAuthenticated, async (req, res) => {
   }
 });
 
-app.get('/api/releases', async (req, res) => {
+app.post('/api/releases', isAuthenticated, isTeamMember, async (req, res) => {
+  const { title, channel, evocati, features, bugFixes, knownIssues } = req.body;
+
   try {
-    const releases = await Release.find().sort({ timestamp: -1 });
-    res.json({ success: true, releases });
+    const newRelease = new Release({ title, channel, evocati, features, bugFixes, knownIssues });
+    await newRelease.save();
+    res.json({ success: true, message: 'Release created successfully' });
   } catch (error) {
-    console.error('Error fetching releases:', error);
+    console.error('Error creating release:', error);
     res.status(500).json({ success: false, message: 'Server error, please try again later.' });
   }
 });
 
-app.get('/api/releases/:id', async (req, res) => {
+app.put('/api/releases/:id', isAuthenticated, isTeamMember, async (req, res) => {
+  const { title, channel, evocati, features, bugFixes, knownIssues } = req.body;
+
   try {
-    const release = await Release.findById(req.params.id);
+    const release = await Release.findByIdAndUpdate(req.params.id, { title, channel, evocati, features, bugFixes, knownIssues }, { new: true });
     if (!release) {
       return res.status(404).json({ success: false, message: 'Release not found' });
     }
-    res.json({ success: true, release });
+    res.json({ success: true, message: 'Release updated successfully' });
   } catch (error) {
-    console.error('Error fetching release:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error('Error updating release:', error);
+    res.status(500).json({ success: false, message: 'Server error, please try again later.' });
+  }
+});
+
+app.delete('/api/releases/:id', isAuthenticated, isTeamMember, async (req, res) => {
+  try {
+    const release = await Release.findByIdAndDelete(req.params.id);
+    if (!release) {
+      return res.status(404).json({ success: false, message: 'Release not found' });
+    }
+    res.json({ success: true, message: 'Release deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting release:', error);
+    res.status(500).json({ success: false, message: 'Server error, please try again later.' });
   }
 });
 
@@ -253,24 +254,19 @@ app.get('/api/releases/:id', async (req, res) => {
 app.get('/files/:filename', (req, res) => {
   const filename = req.params.filename;
   const options = {
-    root: path.join(__dirname, 'files'),
-    headers: {
-      'Content-Disposition': `attachment; filename=${filename}`
-    }
+    root: path.join(__dirname, 'public', 'files')
   };
 
   res.sendFile(filename, options, (err) => {
     if (err) {
-      if (err.code === 'ECONNABORTED' || err.code === 'ECONNRESET') {
-        console.warn('Client aborted the download request');
-      } else {
-        console.error('Error sending file:', err);
-        res.status(404).send('File not found');
-      }
+      console.error('Error sending file:', err);
+      res.status(err.status).end();
+    } else {
+      console.log('Sent:', filename);
     }
   });
 });
 
 app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+  console.log('Server started on port 3000');
 });
