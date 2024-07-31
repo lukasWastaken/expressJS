@@ -102,27 +102,27 @@
     <div id="popup" class="popup">
         <div class="popup-content">
             <span class="close-btn" id="closeBtn">&times;</span>
-            <h2 id="popup-title">Neuen Release hinzufügen</h2>
+            <h2 id="popup-title">Add new Release</h2>
             <form id="releaseForm">
-                <label for="title">Titel:</label>
+                <label for="title">Title:</label>
                 <input type="text" id="title" name="title" required>
                 
-                <label for="channel">Kanal:</label>
+                <label for="channel">Channel:</label>
                 <input type="text" id="channel" name="channel" required>
                 
                 <label for="evocati">Evocati:</label>
                 <input type="checkbox" id="evocati" name="evocati">
                 
-                <label for="features">Funktionen:</label>
+                <label for="features">Features:</label>
                 <textarea id="features" name="features" required></textarea>
                 
-                <label for="bugFixes">Fehlerbehebungen:</label>
+                <label for="bugFixes">Bug fixes:</label>
                 <textarea id="bugFixes" name="bugFixes" required></textarea>
                 
-                <label for="knownIssues">Bekannte Probleme:</label>
+                <label for="knownIssues">Known issues:</label>
                 <textarea id="knownIssues" name="knownIssues" required></textarea>
                 
-                <button type="button" id="saveReleaseBtn">Speichern</button>
+                <button type="button" id="saveReleaseBtn">Save</button>
             </form>
         </div>
     </div>
@@ -298,7 +298,7 @@
         }
 
         async function deleteRelease(id) {
-            if (confirm('Sind Sie sicher, dass Sie diesen Release löschen möchten?')) {
+            if (confirm('Are you sure you want to delete that?')) {
                 try {
                     const response = await fetch(`/api/releases/${id}`, {
                         method: 'DELETE'
