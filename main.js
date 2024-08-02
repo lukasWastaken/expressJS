@@ -152,6 +152,10 @@ app.post('/login', async (req, res) => {
   }
 });
 
+app.get('/firebase', (req, res) => {
+  res.render("firebase.html")
+})
+
 app.get('/logout', (req, res) => {
   req.session.destroy(err => {
     if (err) {
